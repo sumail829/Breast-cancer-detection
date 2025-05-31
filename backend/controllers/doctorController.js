@@ -1,16 +1,20 @@
+import doctor from "../models/doctor.js";
 import Doctor from "../models/doctor.js";
 
 // ✅ CREATE a doctor
 export const createDoctor = async (req, res) => {
   try {
-    const { specialization, department, phone, patient } = req.body;
+    const { specialization, department, phone, patient,email,password,name } = req.body;
 
-    if (!specialization || !department || !phone) {
+    if (!specialization || !department || !phone || !email ||!password || !name) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
     const newDoctor = new Doctor({
       specialization,
+      name,
+      email,
+      password,
       department,
       phone,
       patients: patient ? [patient] : [],
@@ -27,6 +31,26 @@ export const createDoctor = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const loginDoctor = async (req, res) => {
+  try {
+    const {email,password}=req.body;
+    if(!email || !password){
+      return res.status(400).json({message:"Email and password are required"})
+    }
+    const doctor=await Doctor.findOne({email:email})
+    if(!doctor){
+      return res.status(404).json({message:"No doctor found"});
+    }
+    if(doctor.password!=password){
+      return res.status(404).json({message:"Password is incorrect"});
+    }
+    return res.status(200).json({message:"Login successful",doctor});
+  } catch (error) {
+     console.error("Error Login doctor:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
 
 // ✅ READ all doctors
 export const getAllDoctors = async (req, res) => {

@@ -1,17 +1,19 @@
 import mongoose from "mongoose";
 
 const patientSchema = new mongoose.Schema({
-    firstName: String,
-    lastName: String,
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
+    age: Number,
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    confirmPassword: { type: String},
     dateOfBirth: Date,
     gender: String,
     bloodGroup: String,
     phone: String,
     address: String,
     emergencyContact: String,
-    assignedDoctor: { type: mongoose.Schema.Types.ObjectId, ref: "Doctor" },
+    assignedDoctor: { type: mongoose.Schema.Types.ObjectId, ref: "Doctor",required:false },
     medicalHistory: [
         {
             type: mongoose.Schema.Types.ObjectId,
@@ -23,3 +25,31 @@ const patientSchema = new mongoose.Schema({
 
 const Patient = mongoose.model("Patient", patientSchema);
 export default Patient;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

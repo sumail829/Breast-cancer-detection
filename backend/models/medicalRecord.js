@@ -9,4 +9,4 @@ const medicalRecordSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now }
 });
 
-export const MedicalRecord = mongoose.model("MedicalRecord", medicalRecordSchema);
+export const MedicalRecord = mongoose.model("medicalRecord", medicalRecordSchema);

@@ -4,15 +4,16 @@ import Doctor from "../models/doctor.js";
 // ✅ CREATE a doctor
 export const createDoctor = async (req, res) => {
   try {
-    const { specialization, department, phone, patient,email,password,name } = req.body;
+    const { specialization, department, phone, patient,email,password,firstName,lastName } = req.body;
 
-    if (!specialization || !department || !phone || !email ||!password || !name) {
+    if (!specialization || !department || !phone || !email ||!password || !firstName ||!lastName) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
     const newDoctor = new Doctor({
       specialization,
-      name,
+      firstName,
+      lastName,
       email,
       password,
       department,

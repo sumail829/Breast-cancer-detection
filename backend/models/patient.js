@@ -20,6 +20,11 @@ const patientSchema = new mongoose.Schema({
             ref: "MedicalRecord"
         }
     ],
+     role: {
+    type: String,
+    default: "patient",
+    enum: ["patient"],
+  },
     createdAt: { type: Date, default: Date.now }
 });
 

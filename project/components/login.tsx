@@ -1,9 +1,10 @@
 import React from 'react'
 
-export default function login() {
+export default function() {
   return (
     <div>
-      hello world
+      hello 
     </div>
   )
 }
+

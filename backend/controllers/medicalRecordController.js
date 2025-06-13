@@ -1,4 +1,6 @@
+import { config } from "dotenv";
 import { MedicalRecord } from "../models/medicalRecord.js";
+
 
 // 1. Create Medical Record
 export const createMedicalReport = async (req, res) => {
@@ -25,6 +27,43 @@ export const createMedicalReport = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
+
+
+// export const imageUpload = [upload.single('imageUrl'), async (req, res) => {    
+//     try {
+//         const recordId = req.params.id;
+//         const img = req.file;
+//         if (!img) return res.status(400).json({ message: "No image file uploaded" });
+//         console.log(req.file, "file");
+//          const response = await cloudinary.uploader.upload(req.file.path);
+//       console.log(response, "response");
+
+//       // Update existing record with image URL
+//       const updatedRecord = await MedicalRecord.findByIdAndUpdate(
+//         recordId,
+//         {
+//           imageUrl: response.secure_url
+//         },
+//         { new: true }
+//       );
+
+//       if (!updatedRecord) {
+//         return res.status(404).json({ message: "Medical record not found" });
+//       }
+
+//       return res.status(200).json({
+//         message: "Image uploaded and record updated",
+//         record: updatedRecord
+//       });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ message: 'Error uploading image or updating record' });
+//     }
+// }
+// ]
+
+
+
 
 // 2. Get All Medical Records
 export const getAllMedicalRecords = async (req, res) => {

@@ -1,5 +1,14 @@
 import Patient from "../models/patient.js";
+import cloudinary from "cloudinary"
+import multer from "multer";
+const upload = multer({ dest: 'uploads/' })
 
+
+cloudinary.config({
+    cloud_name: "dnhun2a8m",
+    api_key: "418397955729357",
+    api_secret: "-4W76HpN8R9DU03vEabY9BgfuMM"
+})
 
 export const createPatient = async (req, res) => {
   try {
@@ -49,6 +58,8 @@ export const createPatient = async (req, res) => {
   }
 };
 
+
+
 export const loginPatient = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -69,6 +80,43 @@ export const loginPatient = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 }
+
+
+export const imageUpload = [
+  upload.single('imageUrl'),
+  async (req, res) => {
+    try {
+      const { patientId } = req.body;
+      const img = req.file;
+
+      if (!img) {
+        return res.status(400).json({ message: "No image file uploaded" });
+      }
+
+      const response = await cloudinary.uploader.upload(img.path);
+      console.log(response, "cloudinary response");
+
+      const updatedRecord = await Patient.findOneAndUpdate(
+        { patientId },
+        { imageUrl: response.secure_url },
+        { new: true }
+      );
+
+      if (!updatedRecord) {
+        return res.status(404).json({ message: "Patient record not found for this patient" });
+      }
+
+      return res.status(200).json({
+        message: "Image uploaded and record updated",
+        record: updatedRecord
+      });
+
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Error uploading image or updating record' });
+    }
+  }
+];
 
 
 export const getAllPatients = async (req, res) => {

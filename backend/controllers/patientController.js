@@ -2,6 +2,7 @@ import Patient from "../models/patient.js";
 import cloudinary from "cloudinary"
 import multer from "multer";
 const upload = multer({ dest: 'uploads/' })
+import axios from "axios";
 
 
 cloudinary.config({
@@ -106,17 +107,23 @@ export const imageUpload = [
         return res.status(404).json({ message: "Patient record not found for this patient" });
       }
 
-      return res.status(200).json({
-        message: "Image uploaded and record updated",
-        record: updatedRecord
+      // Call FastAPI predict endpoint
+      const predictionResponse = await axios.post("http://localhost:8000/predict", {
+        image_url: response.secure_url
       });
 
+      return res.status(200).json({
+        message: "Image uploaded, record updated, and prediction done",
+        record: updatedRecord,
+        prediction: predictionResponse.data
+      });
     } catch (error) {
       console.error(error);
       return res.status(500).json({ message: 'Error uploading image or updating record' });
     }
   }
 ];
+
 
 
 export const getAllPatients = async (req, res) => {

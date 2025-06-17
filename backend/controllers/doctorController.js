@@ -1,4 +1,4 @@
-import doctor from "../models/doctor.js";
+
 import Doctor from "../models/doctor.js";
 
 // ✅ CREATE a doctor

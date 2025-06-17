@@ -14,8 +14,14 @@ const app=express();
 
 
 
+
+
+
 app.use(cors());
 app.use(express.json());
+
+//Api Endpoints 
+app.get('/', (req, res) => res.send ("API WORKING"));
 
 app.use("/api",doctorRoutes);
 

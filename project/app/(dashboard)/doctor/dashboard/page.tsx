@@ -11,6 +11,7 @@ import DoctorAppointmentsList from '@/components/dashboard/doctor/appointments-l
 import DoctorPatientList from '@/components/dashboard/doctor/patient-list';
 import DoctorPredictionsChart from '@/components/dashboard/doctor/predictions-chart';
 
+
 export default function DoctorDashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -18,8 +19,8 @@ export default function DoctorDashboardPage() {
     <div className="flex flex-col space-y-6">
       <div className="flex flex-col space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Doctor Dashboard</h1>
-        <p className="text-muted-foreground">
-          Welcome back, Dr. Johnson! Here's your overview for today.
+         <p className="text-muted-foreground">
+          Welcome back, Dr. Pradeep ! Here's your overview for today.
         </p>
       </div>
 

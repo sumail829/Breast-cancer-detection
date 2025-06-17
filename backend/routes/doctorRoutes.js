@@ -1,15 +1,22 @@
 import express from 'express';
-import { createDoctor,getAllDoctors,getDoctorById,updateDoctor,deleteDoctor, loginDoctor } from '../controllers/doctorController.js';
+import {
+  createDoctor,
+  getAllDoctors,
+  getDoctorById,
+  updateDoctor,
+  deleteDoctor,
+  loginDoctor
+} from '../controllers/doctorController.js';
 
 const router = express.Router();
-// Define routes for doctor operations
-router.get('/doctor', getAllDoctors); // Get all doctors
-router.get('/doctor/:id', getDoctorById); // Get a doctor by ID
-router.post('/doctor/signup', createDoctor); // Create a new doctor
-router.post('/doctor/login',loginDoctor);//login doctor
-router.patch('/doctor/update/:id', updateDoctor); // Update a doctor by ID
-router.delete('/doctor/delete/:id', deleteDoctor); // Delete a doctor by ID
+
+router.get('/doctor', getAllDoctors);
+router.get('/doctor/:id', getDoctorById);
+router.post('/doctor/signup', createDoctor);
+router.post('/doctor/login', loginDoctor);
+router.patch('/doctor/update/:id', updateDoctor);
+router.delete('/doctor/delete/:id', deleteDoctor);
 
 
-// Export the router
+
 export default router;

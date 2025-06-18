@@ -9,7 +9,7 @@ const router = express.Router();
 router.get('/doctor', getAllDoctors);
 router.get('/doctor/:id', getDoctorById);
 router.post('/doctor/signup', createDoctor);
-router.post('/doctor/login', doctorAuth, loginDoctor);
+router.post('/doctor/login',  loginDoctor);
 router.post('/doctor/logout', logout);
 router.post('/doctor/verify-account', doctorAuth, verifyEmail);
 router.get('/doctoris-auth', doctorAuth, isAuthenticated);

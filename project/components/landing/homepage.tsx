@@ -50,7 +50,7 @@ export function LandingHeader() {
               Features
             </Link>
             <Link
-              href="/login"
+              href="/doctor/login"
               className="text-sm font-medium text-slate-700 hover:text-blue-600 transition-colors"
             >
               Login

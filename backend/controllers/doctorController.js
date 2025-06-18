@@ -1,55 +1,330 @@
 
 import Doctor from "../models/doctor.js";
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import transporter from '../config/nodemailer.js';
 
 // ✅ CREATE a doctor
 export const createDoctor = async (req, res) => {
-  try {
-    const { specialization, department, phone, patient,email,password,firstName,lastName } = req.body;
 
-    if (!specialization || !department || !phone || !email ||!password || !firstName ||!lastName) {
-      return res.status(400).json({ message: "All fields are required" });
+  const { specialization, department, phone, patient, email, password, firstName, lastName } = req.body;
+
+  if (!specialization || !department || !phone || !email || !password || !firstName || !lastName) {
+    return res.status(400).json({ message: "All fields are required" });
+
+  }
+  try {
+    const email = req.body.email?.trim().toLowerCase();
+    const existingDoctor = await Doctor.findOne({ email: email.toLowerCase() });
+    if (existingDoctor) {
+      return res.json({ success: false, message: 'doctor already exists' });
     }
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const newDoctor = new Doctor({
       specialization,
       firstName,
       lastName,
       email,
-      password,
+      password: hashedPassword,
       department,
       phone,
       patients: patient ? [patient] : [],
     });
+    const token = jwt.sign({ id: newDoctor._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-    const doctor = await newDoctor.save();
-
-    res.status(201).json({
-      message: "Doctor created successfully",
-      doctor,
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000
     });
+
+    // To send an email 
+
+    const mailOptions = {
+      from: process.env.SENDER_EMAIL,
+      to: email,
+      subject: 'Welcome to Hospital Care',
+      text: `Welcome to Hospital Care. Your account has been created with email id: ${email}`
+    }
+    await transporter.sendMail(mailOptions);
+
+    await newDoctor.save();
+    return res.status(200).json({ message: `Mail sent successfully to your email [${email}]`, newDoctor });
+    
   } catch (error) {
     console.error("Error creating doctor:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
+
 export const loginDoctor = async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password are required" });
+  }
+
   try {
-    const {email,password}=req.body;
-    if(!email || !password){
-      return res.status(400).json({message:"Email and password are required"})
+    const doctor = await Doctor.findOne({ email });
+
+    if (!doctor) {
+      return res.status(404).json({ message: "No doctor found" });
     }
-    const doctor=await Doctor.findOne({email:email})
-    if(!doctor){
-      return res.status(404).json({message:"No doctor found"});
+
+    const isMatch = await bcrypt.compare(password, doctor.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid password" });
     }
-    if(doctor.password!=password){
-      return res.status(404).json({message:"Password is incorrect"});
+
+    // If account is not verified, send OTP
+    if (!doctor.isAccountVerified) {
+      const otp = String(Math.floor(100000 + Math.random() * 900000));
+      doctor.verifyOtp = otp;
+      doctor.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000;
+      await doctor.save();
+
+      const mailOptions = {
+        from: process.env.SENDER_EMAIL,
+        to: doctor.email,
+        subject: 'Account verification OTP',
+        text: `Your OTP is ${otp}. Verify your account using this OTP.`
+      };
+
+      await transporter.sendMail(mailOptions);
+
+      return res.status(200).json({
+        success: true,
+        message: `Account not verified. OTP sent to ${doctor.email}`,
+        doctorId: doctor._id // you may want to send this for frontend verification
+      });
     }
-    return res.status(200).json({message:"Login successful",doctor});
+
+    // If account is verified, generate token and login
+    const token = jwt.sign({ id: doctor._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.json({
+      success: true,
+      message: 'Login successful',
+      doctor,
+    });
+
   } catch (error) {
-     console.error("Error Login doctor:", error);
+    console.error("Login error:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+
+//controller function for logout
+export const logout = async (req, res) => {
+  try {
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+    })
+
+    return res.status(200).json({
+      success: true, message: 'Logged out'
+    })
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+}
+
+// send verify otp to mail
+export const sendVerifyOtp = async (req, res) => {
+  try {
+    const { doctorId } = req.body;
+
+    if (!doctorId) {
+      return res.status(400).json({ success: false, message: "Doctor ID is required" });
+    }
+
+    const doctor = await Doctor.findById(doctorId);
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: "Doctor not found" });
+    }
+
+    if (doctor.isAccountVerified) {
+      return res.json({ success: false, message: 'Account is already verified' });
+    }
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+
+    doctor.verifyOtp = otp;
+    doctor.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000;
+
+    await doctor.save();
+
+    const mailOption = {
+      from: process.env.SENDER_EMAIL,
+      to: doctor.email,
+      subject: 'Account verification OTP',
+      text: `Your OTP is ${otp}. Verify your account using this OTP.`
+    };
+
+    await transporter.sendMail(mailOption);
+
+    res.json({ success: true, message: `Verification OTP sent to ${doctor.email}` });
+
+  } catch (error) {
+    console.error("SendVerifyOtp Error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+//verify the email using the otp
+export const verifyEmail = async (req, res) => {
+  const { doctorId, otp } = req.body;
+
+  if (!doctorId || !otp) {
+    res.json({ success: false, message: 'Missing Details' });
+
+  }
+  try {
+    const doctor = await Doctor.findById(doctorId);
+    if (!doctor) {
+      return res.json({
+        success: false, message: 'doctor not found'
+      });
+    }
+
+    if (doctor.verifyOtp === '' || doctor.verifyOtp !== otp) {
+      return res.json({ success: false, message: 'Invalid OTP' });
+    }
+
+    if (doctor.verifyOtpExpireAt < Date.now()) {
+      return res.json({ success: false, message: 'OTP Expired' });
+    }
+
+    doctor.isAccountVerified = true;
+
+    doctor.verifyOtp = ' ';
+    doctor.verifyOtpExpireAt = 0;
+
+    await doctor.save();
+    return res.json({ success: true, message: 'Email verified successfully' });
+
+
+  } catch (error) {
+    return res.json({ success: false, message: error.message })
+  }
+}
+
+//check if doctor is Authenticated
+export const isAuthenticated = async (req, res) => {
+  try {
+
+    return res.json({ success: true, message: 'doctor authenticated successfully' });
+
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+}
+
+// send password reset otp 
+export const sendResetOtp = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.json({ success: false, message: "Email is required" });
+
+  }
+  try {
+
+    const doctor = await Doctor.findOne({ email });
+    if (!doctor) {
+      return res.json({ success: false, message: 'doctor not found' });
+    }
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000))
+
+    doctor.resetOtp = otp;
+    doctor.resetOtpExpireAt = Date.now() + 15 * 60 * 1000
+
+    await doctor.save();
+
+    const mailOption = {
+      from: process.env.SENDER_EMAIL,
+      to: doctor.email,
+      subject: 'Password Reset OTP',
+      text: `Your OTP for reseting your password is  ${otp}. Use this otp to proceed eith resesting your password.`
+    }
+
+    await transporter.sendMail(mailOption);
+
+    return res.json({ success: true, message: 'OTP sent to your email' })
+
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+}
+
+//Reset doctor Password 
+
+export const resetPassword = async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+
+  if (!email || !otp || !newPassword) {
+    return res.json({ success: false, message: 'Email, OTP and new password are required ' });
+  }
+  try {
+
+    const doctor = await Doctor.findOne({ email });
+    if (!doctor) {
+      return res.json({ success: false, message: 'doctor not found ' });
+    }
+    if (doctor.resetOtp === '' || doctor.resetOtp !== otp) {
+      return res.json({ success: false, message: 'Invalid OTP ' });
+    }
+
+    if (doctor.resetOtpExpireAt < Date.now()) {
+      return res.json({ success: false, message: 'OTP expired ' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    doctor.password = hashedPassword;
+    doctor.resetOtp = '';
+    doctor.resetOtpExpireAt = 0;
+
+    await doctor.save();
+
+    return res.json({ success: true, message: 'Password has been reset successfully ' });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+}
+
+export const getdoctorData = async (req, res) => {
+  try {
+    const { doctorId } = req.body;
+    const doctor = await Doctor.findById(doctorId);
+
+    if (!doctor) {
+      return res.json({ success: false, message: 'doctor not found' });
+    }
+    res.json({
+      success: true,
+      doctorData: {
+        name: doctor.firstName + ' ' + doctor.lastName,
+        isAccountVerified: doctor.isAccountVerified
+      }
+    })
+  } catch (error) {
+    res.json({ success: false, message: error.message });
   }
 }
 

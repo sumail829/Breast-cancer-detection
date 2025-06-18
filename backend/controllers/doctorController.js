@@ -60,6 +60,7 @@ export const createDoctor = async (req, res) => {
 };
 
 
+//login doctors 
 export const loginDoctor = async (req, res) => {
   const { email, password } = req.body;
 
@@ -79,7 +80,18 @@ export const loginDoctor = async (req, res) => {
       return res.status(401).json({ message: "Invalid password" });
     }
 
-    // If account is not verified, send OTP
+    // Create JWT
+    const token = jwt.sign({ id: doctor._id }, process.env.JWT_SECRET, { expiresIn: '15m' });
+
+    // Set token in cookie so `doctorId` is accessible in `doctorAuth`
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+      maxAge: 15 * 60 * 1000, // shorter expiry until OTP verified
+    });
+
+    // If not verified, send OTP
     if (!doctor.isAccountVerified) {
       const otp = String(Math.floor(100000 + Math.random() * 900000));
       doctor.verifyOtp = otp;
@@ -97,32 +109,24 @@ export const loginDoctor = async (req, res) => {
 
       return res.status(200).json({
         success: true,
-        message: `Account not verified. OTP sent to ${doctor.email}`,
-        doctorId: doctor._id // you may want to send this for frontend verification
+        message: `OTP sent to ${doctor.email}. Please verify to complete login.`,
+        needVerification: true,
       });
     }
 
-    // If account is verified, generate token and login
-    const token = jwt.sign({ id: doctor._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    return res.json({
+    // Already verified → full login
+    return res.status(200).json({
       success: true,
-      message: 'Login successful',
+      message: "Login successful",
       doctor,
     });
 
   } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("Login Error:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 
 
@@ -143,85 +147,43 @@ export const logout = async (req, res) => {
   }
 }
 
-// send verify otp to mail
-export const sendVerifyOtp = async (req, res) => {
-  try {
-    const { doctorId } = req.body;
-
-    if (!doctorId) {
-      return res.status(400).json({ success: false, message: "Doctor ID is required" });
-    }
-
-    const doctor = await Doctor.findById(doctorId);
-    if (!doctor) {
-      return res.status(404).json({ success: false, message: "Doctor not found" });
-    }
-
-    if (doctor.isAccountVerified) {
-      return res.json({ success: false, message: 'Account is already verified' });
-    }
-
-    const otp = String(Math.floor(100000 + Math.random() * 900000));
-
-    doctor.verifyOtp = otp;
-    doctor.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000;
-
-    await doctor.save();
-
-    const mailOption = {
-      from: process.env.SENDER_EMAIL,
-      to: doctor.email,
-      subject: 'Account verification OTP',
-      text: `Your OTP is ${otp}. Verify your account using this OTP.`
-    };
-
-    await transporter.sendMail(mailOption);
-
-    res.json({ success: true, message: `Verification OTP sent to ${doctor.email}` });
-
-  } catch (error) {
-    console.error("SendVerifyOtp Error:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
 //verify the email using the otp
 export const verifyEmail = async (req, res) => {
   const { doctorId, otp } = req.body;
 
   if (!doctorId || !otp) {
-    res.json({ success: false, message: 'Missing Details' });
-
+    return res.status(400).json({ success: false, message: 'Missing details' });
   }
+
   try {
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
-      return res.json({
-        success: false, message: 'doctor not found'
-      });
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
     }
 
-    if (doctor.verifyOtp === '' || doctor.verifyOtp !== otp) {
-      return res.json({ success: false, message: 'Invalid OTP' });
+    if (doctor.verifyOtp !== otp) {
+      return res.status(400).json({ success: false, message: 'Invalid OTP' });
     }
 
     if (doctor.verifyOtpExpireAt < Date.now()) {
-      return res.json({ success: false, message: 'OTP Expired' });
+      return res.status(400).json({ success: false, message: 'OTP expired' });
     }
 
+    // Mark as verified
     doctor.isAccountVerified = true;
-
-    doctor.verifyOtp = ' ';
+    doctor.verifyOtp = '';
     doctor.verifyOtpExpireAt = 0;
 
     await doctor.save();
-    return res.json({ success: true, message: 'Email verified successfully' });
 
+    return res.status(200).json({ success: true, message: 'Email verified successfully' });
 
   } catch (error) {
-    return res.json({ success: false, message: error.message })
+    console.error("VerifyEmail Error:", error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
-}
+};
+
 
 //check if doctor is Authenticated
 export const isAuthenticated = async (req, res) => {

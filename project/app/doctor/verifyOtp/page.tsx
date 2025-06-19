@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import axios from 'axios';
+import Link from 'next/link';
 
 export default function VerifyOtpPage() {
   const [otp, setOtp] = useState('');
@@ -50,6 +51,12 @@ export default function VerifyOtpPage() {
               {loading ? 'Verifying...' : 'Verify'}
             </Button>
           </form>
+       <Link
+    href="/doctor/resendOtp"
+    className="block w-full max-w-md p-6 underline cursor-pointer text-blue-600 hover:text-blue-800 text-center"
+  >
+    Resend OTP
+  </Link>
         </CardContent>
       </Card>
     </div>

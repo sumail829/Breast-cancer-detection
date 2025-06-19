@@ -30,10 +30,18 @@ export default function DashboardHeader({ onMenuButtonClick, userRole }: Dashboa
     { id: 3, content: 'System maintenance scheduled', time: '2 hours ago' },
   ]);
 
-  const handleLogout = () => {
-    // In a real app, you would handle actual logout logic here
-    router.push('/login');
-  };
+ const handleLogout = async () => {
+  try {
+    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/doctor/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+    router.push('/doctor/login');
+  } catch (err) {
+    console.error("Logout failed:", err);
+  }
+};
+
 
   const userName = userRole === 'admin' 
     ? 'Admin User' 

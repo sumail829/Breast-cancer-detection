@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import axios from 'axios';
+import Link from 'next/link';
+
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -65,6 +67,12 @@ export default function LoginPage() {
               {loading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
+           <Link
+    href="/doctor/sendResetOtp"
+    className="block w-full max-w-md p-6 underline cursor-pointer text-blue-600 hover:text-blue-800 text-center"
+  >
+    Forget your password ?
+  </Link>
         </CardContent>
       </Card>
     </div>

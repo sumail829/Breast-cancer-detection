@@ -7,7 +7,7 @@ import { Toaster } from '@/components/ui/toaster';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Hospital Pro | Modern Healthcare Management',
+  title: 'HealthAsist Pro | Modern Healthcare Management',
   description: 'A comprehensive hospital management system for administrators, doctors, and patients',
 };
 

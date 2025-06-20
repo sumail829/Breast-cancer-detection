@@ -1,6 +1,6 @@
-import { Appointment } from "../models/appointment.js";
+import {Appointment} from "../models/appointment.js"
 
-// CREATE Appointment
+import { Notification } from "../models/notification.js";
 export const createAppointment = async (req, res) => {
   try {
     const { patientId, doctorId, date, notes } = req.body;
@@ -17,13 +17,22 @@ export const createAppointment = async (req, res) => {
     });
 
     const savedAppointment = await newAppointment.save();
-    res.status(201).json({ message: "Appointment created successfully", appointment: savedAppointment });
+
+    // 👇 Wait for notification before sending response
+    await Notification.create({
+      recipient: doctorId,
+      sender: patientId,
+      type: 'appointment',
+      message: `New appointment request on ${date}`
+    });
+
+    return res.status(201).json({ message: "Appointment created and notification sent", appointment: savedAppointment });
+
   } catch (error) {
     console.error("Error creating appointment:", error);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
-
 // READ All Appointments
 export const getAllAppointments = async (req, res) => {
   try {

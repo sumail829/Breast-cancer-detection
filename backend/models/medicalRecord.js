@@ -23,9 +23,9 @@ const medicalRecordSchema = new mongoose.Schema({
   },
 
   // 🆕 Added fields for image-based prediction
-  imageUrl: {
-    type: String // local file path or cloud storage URL
-  },
+  // imageUrl: {
+  //   type: String // local file path or cloud storage URL
+  // },
   diagnosisResult: {
     type: String,
     enum: ["Benign", "Malignant", "Pending"],

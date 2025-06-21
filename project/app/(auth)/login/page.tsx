@@ -45,6 +45,33 @@ export default function LoginPage() {
         email, password
       })
 
+
+      const userData = response.data?.doctor || response.data?.patient || response.data?.admin;
+
+      // Store only for doctor login (you can extend for others similarly)
+      if (role === 'doctor') {
+        const doctor = response.data;
+        console.log("Doctor Response:", doctor)
+
+        // Store full doctor object as string
+        localStorage.setItem("doctorData", JSON.stringify(response.data.doctor));
+        ;
+      }
+
+      if (role === 'patient') {
+        const patient = response.data.patient;
+        console.log("Patient Response:", patient);
+
+        // Save full patient object (optional)
+        localStorage.setItem("patientData", JSON.stringify(patient));
+
+        // ✅ Save patientId separately
+        localStorage.setItem("patientId", patient._id);
+      }
+      console.log("📦 patientId:", localStorage.getItem("patientId"));
+      console.log("📦 patientData:", JSON.parse(localStorage.getItem("patientData") || "{}"));
+
+
       console.log('Role selected:', role);
       console.log('Endpoint being used:', endpoint);
 

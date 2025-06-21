@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -13,13 +13,27 @@ import DoctorPredictionsChart from '@/components/dashboard/doctor/predictions-ch
 
 export default function DoctorDashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
+   const [doctor, setDoctor] = useState<null | {
+    firstName:string;
+    lastName:string;
+    specialization: string;
+    department: string;
+    patients: string[];
+  }>(null);
+
+  useEffect(() => {
+    const storedDoctor = localStorage.getItem("doctorData");
+    if (storedDoctor) {
+      setDoctor(JSON.parse(storedDoctor));
+    }
+  }, []);
 
   return (
     <div className="flex flex-col space-y-6">
       <div className="flex flex-col space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Doctor Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome back, Dr. Johnson! Here's your overview for today.
+            {doctor ? `Welcome back, Dr. ${doctor.firstName} ${doctor.lastName}!` : "Loading..."}
         </p>
       </div>
 
@@ -34,7 +48,7 @@ export default function DoctorDashboardPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <DashboardCard
               title="Total Patients"
-              value="167"
+              value={doctor?.patients?.length ?? 0}
               description="under your care"
               icon={<UserIcon className="h-4 w-4 text-muted-foreground" />}
               trend={{ value: 4, isPositive: true }}

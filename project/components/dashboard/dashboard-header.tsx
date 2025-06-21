@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,29 +16,52 @@ import { Menu, Bell, Search, LogOut, Settings, User } from 'lucide-react';
 import { ModeToggle } from '@/components/theme-toggle';
 import { UserRole } from '@/lib/types';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
 
 interface DashboardHeaderProps {
   onMenuButtonClick: () => void;
   userRole: UserRole;
 }
 
+type Notification = {
+  _id: string;
+  message: string;
+  createdAt: string;
+  // any other fields you expect
+};
+
+
 export default function DashboardHeader({ onMenuButtonClick, userRole }: DashboardHeaderProps) {
   const router = useRouter();
-  const [notifications, setNotifications] = useState([
-    { id: 1, content: 'New appointment request', time: '5 minutes ago' },
-    { id: 2, content: 'Dr. Smith updated a patient record', time: '1 hour ago' },
-    { id: 3, content: 'System maintenance scheduled', time: '2 hours ago' },
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('doctorData') || '{}');
+      console.log("Doctor Data from localStorage:", user);
+    if (user?.role === 'doctor') {
+      const doctorId = user._id;
+
+      const fetchNotifications = async () => {
+        try {
+          const res = await axios.get(`http://localhost:4000/api/notification/${doctorId}`);
+          setNotifications(res.data.notifications);
+        } catch (error) {
+          console.error('Failed to load notifications', error);
+        }
+      };
+
+      fetchNotifications();
+    }
+  }, []);
   const handleLogout = () => {
     // In a real app, you would handle actual logout logic here
     router.push('/login');
   };
 
-  const userName = userRole === 'admin' 
-    ? 'Admin User' 
-    : userRole === 'doctor' 
-      ? 'Dr. Johnson' 
+  const userName = userRole === 'admin'
+    ? 'Admin User'
+    : userRole === 'doctor'
+      ? 'Dr. Johnson'
       : 'Patient Smith';
 
   return (
@@ -76,10 +99,12 @@ export default function DashboardHeader({ onMenuButtonClick, userRole }: Dashboa
               <DropdownMenuLabel>Notifications</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {notifications.map((notification) => (
-                <DropdownMenuItem key={notification.id} className="cursor-pointer py-3">
+                <DropdownMenuItem key={notification._id} className="cursor-pointer py-3">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium">{notification.content}</p>
-                    <p className="text-xs text-gray-500">{notification.time}</p>
+                    <p className="text-sm font-medium">{notification.message}</p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(notification.createdAt).toLocaleString()}
+                    </p>
                   </div>
                 </DropdownMenuItem>
               ))}

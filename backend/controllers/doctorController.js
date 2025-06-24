@@ -196,6 +196,51 @@ export const isAuthenticated = async (req, res) => {
   }
 }
 
+
+// Send Resen OTP if expired 
+
+export const resendOtp = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ success: false, message: 'Email is required' });
+  }
+
+  try {
+    const doctor = await Doctor.findOne({ email });
+
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
+    }
+
+    if (doctor.isAccountVerified) {
+      return res.status(400).json({ success: false, message: 'Account already verified' });
+    }
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+
+    doctor.verifyOtp = otp;
+    doctor.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+    await doctor.save();
+
+    const mailOptions = {
+      from: process.env.SENDER_EMAIL,
+      to: doctor.email,
+      subject: 'Resend OTP for Account Verification',
+      text: `Your new OTP for verifying your account is: ${otp}. It is valid for 24 hours.`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    return res.status(200).json({ success: true, message: `OTP resent to ${doctor.email}` });
+
+  } catch (error) {
+    console.error("Resend OTP Error:", error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+
 // send password reset otp 
 export const sendResetOtp = async (req, res) => {
   const { email } = req.body;

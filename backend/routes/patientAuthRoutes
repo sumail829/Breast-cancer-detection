@@ -1,0 +1,10 @@
+import express from 'express'
+import patientAuth from '../middleware/patientAuth.js';
+import { getAllPatients } from '../controllers/patientController.js';
+
+
+const router = express.Router();
+
+router.get('/data',patientAuth, getAllPatients);
+
+export default router;

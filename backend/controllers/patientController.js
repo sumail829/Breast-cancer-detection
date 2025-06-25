@@ -3,6 +3,8 @@ import cloudinary from "cloudinary"
 import multer from "multer";
 const upload = multer({ dest: 'uploads/' })
 import axios from "axios";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken"
 
 
 cloudinary.config({
@@ -22,7 +24,13 @@ export const createPatient = async (req, res) => {
       return res.status(400).json({
         message: "Required fields are missing",
       });
+    } 
+    const patientExist=await Patient.find({email:email});
+    if(!patientExist){
+      return res.status(400).json({message:"Patient already exist with that email"})
     }
+     const salt=await bcrypt.genSalt(10);
+    const hassedPassword=await bcrypt.hash(password,salt)
 
     // Create new patient instance
     const newPatientData = {
@@ -36,16 +44,19 @@ export const createPatient = async (req, res) => {
       phone,
       address,
       emergencyContact,
-      password,
+      password:hassedPassword,
       confirmPassword,
     };
 
     if (assignedDoctor && mongoose.Types.ObjectId.isValid(assignedDoctor)) {
       newPatientData.assignedDoctor = assignedDoctor;
     }
+    if(password!==confirmPassword){
+      return res.status(400).json({message:"password and confirmPassword are not same"})
+    }
 
     const newPatient = new Patient(newPatientData);
-
+     
     // Save to DB
     const savedPatient = await newPatient.save();
 
@@ -71,10 +82,13 @@ export const loginPatient = async (req, res) => {
     if (!patient) {
       return res.status(404).json({ message: "Patient not found" })
     }
-    if (patient.password !== password) {
-      return res.status(401).json({ message: "Invalid password" })
-    }
-    return res.status(200).json({ message: "Login successful", patient })
+   const isMatch=await bcrypt.compare(password,patient.password);
+   if(!isMatch){
+    return res.status(401).json({message:"Invalid credential"})
+   }
+   const token=jwt.sign({id:patient._id,role:patient.role},process.env.JWT_SECRET,{expiresIn:"30d"})
+   const {password:_,...patientWithoutPassword}=patient._doc;
+    return res.status(200).json({ message: "Login successful",token, patient:patientWithoutPassword })
 
   } catch (error) {
     console.error("Error logging in patient:", error);

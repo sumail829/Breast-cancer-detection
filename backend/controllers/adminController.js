@@ -1,4 +1,8 @@
 import Admin from "../models/admin.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import 'dotenv/config';
+import mongoose from "mongoose";
 
 export const createAdmin = async (req, res) => {
     try {
@@ -6,15 +10,21 @@ export const createAdmin = async (req, res) => {
         if (!firstName || !lastName || !email || !password) {
             return res.status(400).json({ message: "All the field must be filled" })
         }
+        
+        const adminExists = await Admin.findOne({email:email});
+        if(adminExists){
+            return res.status(400).json({message:"admin with this email already exists"})
+        }
+        const salt=await bcrypt.genSalt(10);
+        const hashedpassword=await bcrypt.hash(password,salt);
         const newAdmin = new Admin({
-            ...req.body
-        })
-
-        const admin = await newAdmin.save();
-        res.status(201).json({
-            message: "Admin created successfully",
-            admin,
-        });
+            firstName,
+            lastName,
+            email,
+            password:hashedpassword,
+            role: "admin"
+        }).save();
+              return res.status(201).json({message:"Admin created",admin:newAdmin})
     } catch (error) {
         console.error("Error creating Admin:", error);
         res.status(500).json({ message: "Internal server error" });
@@ -31,10 +41,13 @@ export const loginAdmin = async (req, res) => {
         if (!admin) {
             return res.status(404).json({ message: "No admin found" })
         }
-        if (admin.password != password) {
-            return res.status(400).json({ message: "Password is incorrect" })
+        const isMatch=await bcrypt.compare(password,admin.password);
+        if(!isMatch){
+            return res.status(401).json({message:"Invalid credential"});
         }
-        return res.status(200).json({ message: "Login successful", admin })
+        const token = jwt.sign({id:admin._id, role: admin.role}, process.env.JWT_SECRET,{expiresIn:"30d"});
+        const { password: _, ...adminWithoutPassword } = admin._doc; // Exclude password from response
+        return res.status(200).json({ message: "Login successful",token, admin:adminWithoutPassword });
     } catch (error) {
         console.error("Error login Admin:", error);
         res.status(500).json({ message: "Internal server error" });

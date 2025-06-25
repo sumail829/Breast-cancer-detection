@@ -1,8 +1,9 @@
-import {Appointment} from "../models/appointment.js"
+import { Appointment } from "../models/appointment.js"
 
 import { Notification } from "../models/notification.js";
 export const createAppointment = async (req, res) => {
   try {
+    console.log("📥 Incoming request:", req.body); // 👈 Add this
     const { patientId, doctorId, date, notes } = req.body;
 
     if (!patientId || !doctorId || !date) {
@@ -42,9 +43,10 @@ export const getAllAppointments = async (req, res) => {
 
     res.status(200).json({ message: "Appointments fetched", appointments });
   } catch (error) {
-    console.error("Error fetching appointments:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("❌ Error creating appointment:", error);
+    return res.status(500).json({ message: "Internal server error", error: error.message });
   }
+
 };
 
 // READ Single Appointment

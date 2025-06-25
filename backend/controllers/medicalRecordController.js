@@ -5,7 +5,16 @@ import { MedicalRecord } from "../models/medicalRecord.js";
 // 1. Create Medical Record
 export const createMedicalReport = async (req, res) => {
     try {
-        const { doctorId, patientId, diagnosis, prescription, notes } = req.body;
+        const {
+            doctorId,
+            patientId,
+            diagnosis,
+            prescription,
+            notes,
+            diagnosisResult,
+            predictionConfidence,
+            predictionDate
+        } = req.body;
 
         if (!doctorId || !patientId || !diagnosis || !prescription || !notes) {
             return res.status(400).json({ message: "All fields must be filled" });
@@ -16,15 +25,19 @@ export const createMedicalReport = async (req, res) => {
             patientId,
             diagnosis,
             prescription,
-            notes
+            notes,
+            diagnosisResult,
+            predictionConfidence,
+            predictionDate: predictionDate ? new Date(predictionDate) : undefined
         });
 
-        const savedReport = await newMedicalReport.save();
+        const savedReport = await newMedicalReport.save(); // ✅ fixed
+
         res.status(201).json({ message: "Medical record created", record: savedReport });
 
     } catch (error) {
         console.error("Error creating medical record:", error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ message: "Internal server error", error: error.message || error });
     }
 };
 
@@ -80,7 +93,7 @@ export const getAllMedicalRecords = async (req, res) => {
 export const getRecordsByPatient = async (req, res) => {
     try {
         const { patientId } = req.params;
-        const records = await MedicalRecord.find({ patientId }).populate('doctorId');
+        const records = await MedicalRecord.find({ patientId }).populate('doctorId').sort({ createdAt: -1 });;
         res.status(200).json({ records });
     } catch (error) {
         console.error("Error fetching patient records:", error);

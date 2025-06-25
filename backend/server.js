@@ -30,6 +30,12 @@ app.use("/api",appointmentRoutes);
 
 app.use("/api",notificationRoutes)
 
+app.use((req, res) => {
+  console.log(`❌ 404 - Route not found: ${req.method} ${req.originalUrl}`);
+  res.status(404).send("Route not found");
+});
+
+
 app.listen(4000,()=>{
     console.log(`server running on port 4000`)
 } )

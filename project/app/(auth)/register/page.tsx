@@ -30,8 +30,8 @@ export default function RegisterPage() {
     assignedDoctor: '',
     password: '',
     confirmPassword: '',
-    specialization:'',
-    department:'',
+    specialization: '',
+    department: '',
     role: 'patient' as UserRole,
   });
 
@@ -48,6 +48,9 @@ export default function RegisterPage() {
 
   const handleGenderChange = (value: string) => {
     setFormData(prev => ({ ...prev, gender: value }));
+  };
+  const handleBloodGroupChange = (value: string) => {
+    setFormData(prev => ({ ...prev, bloodGroup: value }));
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -68,13 +71,13 @@ export default function RegisterPage() {
       let endpoint = '';
       switch (formData.role) {
         case 'admin':
-          endpoint= "http://localhost:4000/api/admin/signup";
+          endpoint = "http://localhost:4000/api/admin/signup";
           break;
         case 'doctor':
-          endpoint= "http://localhost:4000/api/doctor/signup";
+          endpoint = "http://localhost:4000/api/doctor/signup";
           break;
         case 'patient':
-          endpoint= "http://localhost:4000/api/patients/signup";
+          endpoint = "http://localhost:4000/api/patients/signup";
           break;
       }
       console.log("Login API endpoint:", endpoint);
@@ -106,24 +109,24 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-blue-100 p-4">
       <Card className="w-full max-w-2xl shadow-lg">
 
-          <CardHeader className="space-y-1">
+        <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
           <CardDescription className="text-center">Enter your information to register</CardDescription>
         </CardHeader>
 
         <div className="col-span-2 space-y-2 p-6">
-              <Label htmlFor="role">Register As</Label>
-              <Select value={formData.role} onValueChange={handleRoleChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">Administrator</SelectItem>
-                  <SelectItem value="doctor">Doctor</SelectItem>
-                  <SelectItem value="patient">Patient</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <Label htmlFor="role">Register As</Label>
+          <Select value={formData.role} onValueChange={handleRoleChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a role" />
+            </SelectTrigger>
+            <SelectContent>
+              {/* <SelectItem value="admin">Administrator</SelectItem> */}
+              <SelectItem value="doctor">Doctor</SelectItem>
+              <SelectItem value="patient">Patient</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <form onSubmit={handleRegister}>
           <CardContent className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -165,7 +168,22 @@ export default function RegisterPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="bloodGroup">Blood Group</Label>
-              <Input name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} />
+              <Select value={formData.bloodGroup} onValueChange={handleBloodGroupChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Blood Group" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="A+">A+</SelectItem>
+                  <SelectItem value="A-">A-</SelectItem>
+                  <SelectItem value="B+">B+</SelectItem>
+                  <SelectItem value="B-">B-</SelectItem>
+                  <SelectItem value="AB+">AB+</SelectItem>
+                  <SelectItem value="AB-">AB-</SelectItem>
+                  <SelectItem value="O+">O+</SelectItem>
+                  <SelectItem value="O-">O-</SelectItem>
+                  <SelectItem value="Don't Know">Don't Know</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="col-span-2 space-y-2">
               <Label htmlFor="address">Address</Label>
@@ -181,14 +199,14 @@ export default function RegisterPage() {
                 <Input name="assignedDoctor" value={formData.assignedDoctor} onChange={handleChange} />
               </div>
             )}
-            {formData.role ==='doctor'&& (
-             <div className="col-span-2 space-y-2">
+            {formData.role === 'doctor' && (
+              <div className="col-span-2 space-y-2">
                 <Label htmlFor="specialization">Specialization</Label>
                 <Input name="specialization" value={formData.specialization} onChange={handleChange} />
               </div>
             )}
-            {formData.role ==='doctor'&& (
-             <div className="col-span-2 space-y-2">
+            {formData.role === 'doctor' && (
+              <div className="col-span-2 space-y-2">
                 <Label htmlFor="department">Department</Label>
                 <Input name="department" value={formData.department} onChange={handleChange} />
               </div>

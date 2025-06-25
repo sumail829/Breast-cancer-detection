@@ -7,21 +7,28 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+type UserRole = 'admin' | 'doctor' | 'patient';
+
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState('');
+  const [role, setRole] = useState<UserRole | ''>('');
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const storedEmail = localStorage.getItem('resetEmail');
-    if (!storedEmail) {
-      alert('No email found. Please request reset OTP again.');
-      router.push('/doctor/sendResetOtp');
+    const storedRole = localStorage.getItem('resetRole') as UserRole | null;
+
+    if (!storedEmail || !storedRole) {
+      alert('Missing reset details. Please request reset OTP again.');
+      router.push('/sendResetOtp');
     } else {
       setEmail(storedEmail);
+      setRole(storedRole);
     }
   }, [router]);
 
@@ -31,10 +38,26 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/doctor/reset-password`, {
+      let endpoint = '';
+      switch (role) {
+        case 'admin':
+          endpoint = `${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/reset-password`;
+          break;
+        case 'doctor':
+          endpoint = `${process.env.NEXT_PUBLIC_BACKEND_URL}/doctor/reset-password`;
+          break;
+        case 'patient':
+          endpoint = `${process.env.NEXT_PUBLIC_BACKEND_URL}/patients/reset-password`;
+          break;
+        default:
+          throw new Error('Invalid user role.');
+      }
+
+      const res = await axios.post(endpoint, {
         email,
         otp,
         newPassword,
+        confirmNewPassword, 
       });
 
       if (!res.data.success) {
@@ -44,7 +67,8 @@ export default function ResetPasswordPage() {
 
       alert('Password reset successful');
       localStorage.removeItem('resetEmail');
-      router.push('/doctor/login');
+      localStorage.removeItem('resetRole');
+      router.push(`/login`);
     } catch (err: any) {
       const message = err?.response?.data?.message || 'Server error';
       setError(message);
@@ -69,6 +93,12 @@ export default function ResetPasswordPage() {
             />
             <Input
               type="text"
+              value={role}
+              readOnly
+              className="bg-gray-100 cursor-not-allowed uppercase"
+            />
+            <Input
+              type="text"
               placeholder="Enter OTP"
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
@@ -79,6 +109,13 @@ export default function ResetPasswordPage() {
               placeholder="Enter new password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
+              required
+            />
+            <Input
+              type="password"
+              placeholder="Confirm new password"
+              value={confirmNewPassword}
+              onChange={(e) => setConfirmNewPassword(e.target.value)}
               required
             />
             {error && <p className="text-red-500 text-sm">{error}</p>}

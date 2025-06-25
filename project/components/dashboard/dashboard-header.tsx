@@ -36,8 +36,9 @@ export default function DashboardHeader({ onMenuButtonClick, userRole }: Dashboa
       method: 'POST',
       credentials: 'include',
     });
-    router.push('/doctor/login');
+    router.push('/');
   } catch (err) {
+    alert("Logout failed:");
     console.error("Logout failed:", err);
   }
 };

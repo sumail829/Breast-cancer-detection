@@ -86,9 +86,10 @@ export const loginPatient = async (req, res) => {
     if (!patient) {
       return res.status(404).json({ message: "Patient not found" })
     }
-    if (patient.password !== password) {
-      return res.status(401).json({ message: "Invalid password" })
-    }
+      const isMatch = await bcrypt.compare(password, patient.password);
+       if (!isMatch) {
+         return res.status(401).json({ message: "Invalid password" });
+       }
 
      // Create JWT
     const token = jwt.sign({ id: patient._id }, process.env.JWT_SECRET, { expiresIn: '15m' });
@@ -288,65 +289,61 @@ export const sendResetOtp = async (req, res) => {
   }
 }
 
-//Reset patient Password 
+// Reset patient password
 
 export const resetPassword = async (req, res) => {
-  const { email, otp, newPassword } = req.body;
+  const { email, otp, newPassword, confirmNewPassword } = req.body;
 
-  if (!email || !otp || !newPassword) {
-    return res.json({ success: false, message: 'Email, OTP and new password are required ' });
+  if (!email || !otp || !newPassword || !confirmNewPassword) {
+    return res.json({
+      success: false,
+      message: 'Email, OTP, new password, and confirm password are required',
+    });
   }
-  try {
 
+  if (newPassword !== confirmNewPassword) {
+    return res.json({
+      success: false,
+      message: "Password and confirm password don't match",
+    });
+  }
+
+  try {
     const patient = await Patient.findOne({ email });
+
     if (!patient) {
-      return res.json({ success: false, message: 'patient not found ' });
+      return res.json({ success: false, message: 'Patient not found' });
     }
-    if (patient.resetOtp === '' || patient.resetOtp !== otp) {
-      return res.json({ success: false, message: 'Invalid OTP ' });
+
+    if (!patient.resetOtp || patient.resetOtp.trim() !== otp.trim()) {
+      return res.json({ success: false, message: 'Invalid OTP' });
     }
 
     if (patient.resetOtpExpireAt < Date.now()) {
-      return res.json({ success: false, message: 'OTP expired ' });
+      return res.json({ success: false, message: 'OTP has expired' });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
+   
 
     patient.password = hashedPassword;
+    patient.confirmPassword = hashedPassword;
     patient.resetOtp = '';
     patient.resetOtpExpireAt = 0;
 
     await patient.save();
 
-    return res.json({ success: true, message: 'Password has been reset successfully ' });
-  } catch (error) {
-    res.json({ success: false, message: error.message });
-  }
-}
-
-export const getPatientData = async (req, res) => {
-  try {
-    const { PatientId } = req.body;
-    const patient = await Patient.findById(PatientId);
-
-    if (!patient) {
-      return res.json({ success: false, message: 'patient not found' });
-    }
-    res.json({
+    return res.json({
       success: true,
-      PatientData: {
-        name: patient.firstName + ' ' + patient.lastName,
-        isAccountVerified: patient.isAccountVerified
-      }
-    })
+      message: 'Password has been reset successfully',
+    });
   } catch (error) {
-    res.json({ success: false, message: error.message });
+    return res.json({
+      success: false,
+      message: error.message || 'Server error',
+    });
   }
-}
-
-
-
-
+};
 
 
 

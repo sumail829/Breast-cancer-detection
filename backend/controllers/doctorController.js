@@ -7,9 +7,9 @@ import transporter from '../config/nodemailer.js';
 // ✅ CREATE a doctor
 export const createDoctor = async (req, res) => {
 
-  const { specialization, department, phone, patient, email, password, firstName, lastName } = req.body;
+  const { specialization, department, phone, doctor, email, password, firstName, lastName ,confirmPassword } = req.body;
 
-  if (!specialization || !department || !phone || !email || !password || !firstName || !lastName) {
+  if (!specialization || !department || !phone || !email || !password || !firstName || !lastName || !confirmPassword) {
     return res.status(400).json({ message: "All fields are required" });
 
   }
@@ -27,9 +27,10 @@ export const createDoctor = async (req, res) => {
       lastName,
       email,
       password: hashedPassword,
+      confirmPassword:hashedPassword,
       department,
       phone,
-      patients: patient ? [patient] : [],
+      doctors: doctor ? [doctor] : [],
     });
     const token = jwt.sign({ id: newDoctor._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
@@ -282,38 +283,58 @@ export const sendResetOtp = async (req, res) => {
 //Reset doctor Password 
 
 export const resetPassword = async (req, res) => {
-  const { email, otp, newPassword } = req.body;
+  const { email, otp, newPassword, confirmNewPassword } = req.body;
 
-  if (!email || !otp || !newPassword) {
-    return res.json({ success: false, message: 'Email, OTP and new password are required ' });
+  if (!email || !otp || !newPassword || !confirmNewPassword) {
+    return res.json({
+      success: false,
+      message: 'Email, OTP, new password, and confirm password are required',
+    });
   }
-  try {
 
+  if (newPassword !== confirmNewPassword) {
+    return res.json({
+      success: false,
+      message: "Password and confirm password don't match",
+    });
+  }
+
+  try {
     const doctor = await Doctor.findOne({ email });
+
     if (!doctor) {
-      return res.json({ success: false, message: 'doctor not found ' });
+      return res.json({ success: false, message: 'Doctor not found' });
     }
-    if (doctor.resetOtp === '' || doctor.resetOtp !== otp) {
-      return res.json({ success: false, message: 'Invalid OTP ' });
+
+    if (!doctor.resetOtp || doctor.resetOtp.trim() !== otp.trim()) {
+      return res.json({ success: false, message: 'Invalid OTP' });
     }
 
     if (doctor.resetOtpExpireAt < Date.now()) {
-      return res.json({ success: false, message: 'OTP expired ' });
+      return res.json({ success: false, message: 'OTP has expired' });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
+   
 
     doctor.password = hashedPassword;
+    doctor.confirmPassword = hashedPassword;
     doctor.resetOtp = '';
     doctor.resetOtpExpireAt = 0;
 
     await doctor.save();
 
-    return res.json({ success: true, message: 'Password has been reset successfully ' });
+    return res.json({
+      success: true,
+      message: 'Password has been reset successfully',
+    });
   } catch (error) {
-    res.json({ success: false, message: error.message });
+    return res.json({
+      success: false,
+      message: error.message || 'Server error',
+    });
   }
-}
+};
 
 export const getdoctorData = async (req, res) => {
   try {
@@ -349,7 +370,7 @@ export const getAllDoctors = async (req, res) => {
 // ✅ READ one doctor by ID
 export const getDoctorById = async (req, res) => {
   try {
-    const doctor = await Doctor.findById(req.params.id).populate("patients");
+    const doctor = await Doctor.findById(req.params.id).populate("doctors");
 
     if (!doctor) {
       return res.status(404).json({ message: "Doctor not found" });
@@ -365,11 +386,11 @@ export const getDoctorById = async (req, res) => {
 // ✅ UPDATE doctor
 export const updateDoctor = async (req, res) => {
   try {
-    const { specialization, department, phone, patients } = req.body;
+    const { specialization, department, phone, doctors } = req.body;
 
     const updatedDoctor = await Doctor.findByIdAndUpdate(
       req.params.id,
-      { specialization, department, phone, patients },
+      { specialization, department, phone, doctors },
       { new: true, runValidators: true }
     );
 

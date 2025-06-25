@@ -8,7 +8,7 @@ const patientSchema = new mongoose.Schema({
     age: { type: Number, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    confirmPassword: { type: String },
+    confirmPassword: { type: String, required: true },
     dateOfBirth: { type: Date, required: true },
     gender: {
         type: String,

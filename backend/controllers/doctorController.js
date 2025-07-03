@@ -81,6 +81,8 @@ export const getAllDoctors = async (req, res) => {
 
 // ✅ READ one doctor by ID
 export const getDoctorById = async (req, res) => {
+  // const userid = req.user.userId
+  console.log(JSON.stringify(req.params))
   try {
     const doctor = await Doctor.findById(req.params.id).populate("patients");
 

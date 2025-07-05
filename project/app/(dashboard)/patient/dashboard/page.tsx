@@ -23,22 +23,22 @@ import axios from 'axios';
 
 export default function PatientDashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
-  const [viewhistory, setViewHistory] = useState('');
+  const [viewhistory, setViewHistory] = useState<any>(null);
 
   useEffect(() => {
     const fetchMedicalHistory = async () => {
       try {
         const currentPatientId = localStorage.getItem("patientId");
-
-        const res = await axios.get(`http://localhost:4000/api/patients/${currentPatientId}`)
-        console.log(res, "this is patient meical data")
-        setViewHistory(res.data);
+        const res = await axios.get(`http://localhost:4000/api/patients/${currentPatientId}`);
+        console.log(res.data, "this is patient medical data");
+        const patient = res.data.patients;
+        setViewHistory(patient);
       } catch (error) {
-         console.log("something went wrong",error)
+        console.log("something went wrong", error);
       }
-    }
+    };
     fetchMedicalHistory();
-  })
+  }, []);
 
 
 
@@ -47,16 +47,16 @@ export default function PatientDashboardPage() {
       <div className="flex flex-col space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Patient Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome back, John! Here's an overview of your health information.
+          Welcome {viewhistory?.firstName} {viewhistory?.lastName}
         </p>
       </div>
 
       <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="appointments">Appointments</TabsTrigger>
-          <TabsTrigger value="test-results">Test Results</TabsTrigger>
-          <TabsTrigger value="medical-records">Medical Records</TabsTrigger>
+          <Link href="/patient/setappointment"><TabsTrigger value="setappointment">Appointments</TabsTrigger></Link>
+          <Link href="/patient/viewresult"><TabsTrigger value="viewresult">Test Results</TabsTrigger></Link>
+          <Link href="/patient/view-medical-history"><TabsTrigger value="medical-records">Medical Records</TabsTrigger></Link>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -94,7 +94,7 @@ export default function PatientDashboardPage() {
             {/* My doctor */}
 
 
-            {/* <Card className="md:col-span-2">
+            <Card className="md:col-span-2">
               <CardHeader>
                 <CardTitle>My Doctor</CardTitle>
                 <CardDescription>Your assigned healthcare provider</CardDescription>
@@ -107,7 +107,9 @@ export default function PatientDashboardPage() {
                     </AvatarFallback>
                   </Avatar>
                   <div className="space-y-1 text-center">
-                    <h3 className="text-xl font-medium">Dr. Sarah Johnson</h3>
+                    <h3 className="text-xl font-medium">
+                      {viewhistory?.doctorId?.firstName ?? 'No Doctor Assigned'}
+                    </h3>
                     <p className="text-sm text-muted-foreground">Oncologist</p>
                     <div className="flex items-center justify-center space-x-1 text-yellow-500">
                       {[1, 2, 3, 4, 5].map((star) => (
@@ -128,7 +130,7 @@ export default function PatientDashboardPage() {
                   <Button variant="outline" className="w-full">Contact Doctor</Button>
                 </div>
               </CardContent>
-            </Card> */}
+            </Card>
 
             <Card className="md:col-span-4">
               <CardHeader>
@@ -207,7 +209,7 @@ export default function PatientDashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  {/* <div className="flex items-center justify-between">
                     <p className="text-sm font-medium">Last Test</p>
                     <p className="text-sm text-muted-foreground">March 10, 2025</p>
                   </div>
@@ -227,20 +229,20 @@ export default function PatientDashboardPage() {
                       <p className="text-sm">Follow-up Recommended</p>
                       <p className="text-sm font-medium">6 months</p>
                     </div>
-                  </div>
+                  </div> */}
                   <div className="flex space-x-2">
                     <Button variant="outline" className="flex-1" asChild>
                       <Link href="/patient/test-results">View Report</Link>
                     </Button>
                     <Button className="flex-1" asChild>
-                      <Link href="/patient/cancer">New Screening</Link>
+                      <Link href="/patient/payment">New Screening</Link>
                     </Button>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle>Treatment Progress</CardTitle>
                 <CardDescription>Your current treatment status</CardDescription>
@@ -276,7 +278,7 @@ export default function PatientDashboardPage() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         </TabsContent>
 

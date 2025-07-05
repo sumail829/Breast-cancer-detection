@@ -29,7 +29,7 @@ export default function page() {
 
   return (
     <div>
-        {reports.map((report, index) => (
+        {reports && reports.map((report, index) => (
    <div key={index} className="p-6 max-w-xl mx-auto">
       <h2 className="text-2xl font-bold mb-4 text-center">🧾 Medical Report</h2>
       {report ? (

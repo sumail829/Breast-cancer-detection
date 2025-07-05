@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -26,6 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Appointment } from '@/lib/types';
+import axios from 'axios';
 
 // Dummy data
 const appointments: Appointment[] = [
@@ -103,23 +104,55 @@ const patients = {
   p7: "Jennifer Lee",
 };
 
-export default function DoctorAppointmentsList() {
+export default function DoctorAppointmentsList({doctorsData}:{doctorsData:any}) {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [status, setStatus] = useState<"all" | "scheduled" | "completed" | "cancelled">("all");
+//   const [appointmentData, setAppointmentData] = useState([])
+
+
+//   useEffect(() => {
+//     const user = JSON.parse(localStorage.getItem('userData') || '{}');
+//     console.log("Doctor Data from localStorage:", user);
+//     if (user?.role === 'doctor') {
+//       const doctorId = user._id;
+//       const fetchAppoointmentById = async () => {
+//         try {
+//           const res = await axios.get(`http://localhost:4000/api/appointments/doctor/${doctorId}`)
+//           console.log(res.data.DoctorAppo, "This is appointment data");
+//           setAppointmentData(res.data.DoctorAppo)
+//         } catch (error) {
+//           console.log("Something went wrong", error)
+//         }
+//       }
+//       fetchAppoointmentById();
   
-  const filteredAppointments = appointments.filter((appointment) => {
-    const dateMatches = date 
-      ? appointment.date.toDateString() === date.toDateString() 
-      : true;
+//     }
+//   }, [])
+
+//   useEffect(() => {
+//   console.log("Fetched notifications:", doctorsData);
+// }, [appointmentData]);
+const filteredNotifications = doctorsData; // <-- test this first
+
+  // const filteredNotifications = appointmentData.filter((notif) => {
+  //   const notifDate = new Date(notif.createdAt);
+  //   const dateMatches = date
+  //     ? notifDate.toDateString() === date.toDateString()
+  //     : true;
+
+  //   return dateMatches;
+  // });
+  const handleDeleteAppointment=async()=>{
+    try {
+      const deleteAppointment=await axios.delete("")
+    } catch (error) {
       
-    const statusMatches = status === "all" || appointment.status === status;
-    
-    return dateMatches && statusMatches;
-  });
+    }
+  }
 
   return (
-    <div className="grid gap-4 md:grid-cols-[300px_1fr]">
-      <div className="space-y-4">
+    <div className="flex gap-4 md:grid-cols-[300px_1fr]">
+      {/* <div className="space-y-4">
         <Card>
           <CardHeader>
             <CardTitle>Filter Appointments</CardTitle>
@@ -184,7 +217,7 @@ export default function DoctorAppointmentsList() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
@@ -198,7 +231,7 @@ export default function DoctorAppointmentsList() {
           </Button>
         </CardHeader>
         <CardContent>
-          {filteredAppointments.length === 0 ? (
+          {/* {filteredAppointments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <div className="text-muted-foreground mb-2">No appointments found</div>
               <p className="text-sm text-muted-foreground">
@@ -217,7 +250,7 @@ export default function DoctorAppointmentsList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredAppointments.map((appointment) => (
+                {appointmentData.map((appointment) => (
                   <TableRow key={appointment.id}>
                     <TableCell className="font-medium">
                       {patients[appointment.patientId as keyof typeof patients]}
@@ -253,7 +286,60 @@ export default function DoctorAppointmentsList() {
                   </TableRow>
                 ))}
               </TableBody>
+            </Table> */}
+          {filteredNotifications.length === 0 ? (
+            <div className="text-center py-6">No notifications founds</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Sender</TableHead>
+                  <TableHead>notes</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>Reply</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredNotifications.map((notif:any) => (
+                  <TableRow key={notif._id}>
+                    <TableCell className="font-medium">
+                     {notif.patientId ? `${notif.patientId.firstName} ${notif.patientId.lastName}` : 'Unknown'}
+
+                    </TableCell>  
+                    <TableCell className="max-w-[300px] truncate">
+                      {notif.notes}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(notif.date).toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      <div
+                        className={`px-2 py-1 rounded-full text-xs font-medium w-fit ${notif.status ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}
+                      >
+                        {notif.status ? 'Read' : 'Unread'}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right space-x-1">
+                      <Button variant="ghost" size="sm">
+                        View
+                      </Button>
+                      {!notif.status && (
+                        <Button variant="outline" size="sm">
+                          Mark as Read
+                        </Button>
+                      )}
+                    </TableCell>
+                    <TableCell className='text-right space-x-1'>
+                       <Button>Accept</Button>
+                       <Button>Delete</Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
             </Table>
+
           )}
         </CardContent>
       </Card>

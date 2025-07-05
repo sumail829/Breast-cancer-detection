@@ -16,6 +16,7 @@ import { Menu, Bell, Search, LogOut, Settings, User } from 'lucide-react';
 import { ModeToggle } from '@/components/theme-toggle';
 import { UserRole } from '@/lib/types';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/app/context/AuthContext';
 import axios from 'axios';
 
 interface DashboardHeaderProps {
@@ -32,12 +33,13 @@ type Notification = {
 
 
 export default function DashboardHeader({ onMenuButtonClick, userRole }: DashboardHeaderProps) {
+  const { user, role, logout } = useAuth();
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('doctorData') || '{}');
-      console.log("Doctor Data from localStorage:", user);
+    const user = JSON.parse(localStorage.getItem('userData') || '{}');
+    console.log("Doctor Data from localStorage:", user);
     if (user?.role === 'doctor') {
       const doctorId = user._id;
 
@@ -55,6 +57,22 @@ export default function DashboardHeader({ onMenuButtonClick, userRole }: Dashboa
   }, []);
   const handleLogout = () => {
     // In a real app, you would handle actual logout logic here
+    logout(); // clear context + localStorage
+
+    // redirect to login
+    switch (role) {
+      case 'admin':
+        router.push('/admin/login');
+        break;
+      case 'doctor':
+        router.push('/doctor/login');
+        break;
+      case 'patient':
+        router.push('/patient/login');
+        break;
+      default:
+        router.push('/login');
+    }
     router.push('/login');
   };
 

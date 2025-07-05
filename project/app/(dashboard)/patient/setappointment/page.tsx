@@ -20,10 +20,12 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Clock } from 'lucide-react';
 import { format } from 'date-fns';
+import Link from 'next/link';
 
 type Doctor = {
   _id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   specialization: string;
   department: string;
   email: string;
@@ -44,8 +46,26 @@ export default function SetAppointmentPage() {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const res = await axios.get('http://localhost:4000/api/doctor');
-        setDoctors(res.data);
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          console.warn("🚫 No token found in localStorage");
+          toast({
+            title: "Unauthorized",
+            description: "Please log in again.",
+            variant: "destructive",
+          });
+          router.push("/login");
+          return;
+        }
+
+        const res = await axios.get('http://localhost:4000/api/doctor', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        });
+        console.log(res.data,"tjis is doctor data");
+        setDoctors(res.data.doctors);
       } catch (err) {
         console.error('Error fetching doctors:', err);
         toast({
@@ -105,7 +125,7 @@ export default function SetAppointmentPage() {
         description: `Doctor has been notified about your appointment request.`,
       });
 
-      router.push('/patient/appointments');
+      router.push("/patient/dashboard")
     } catch (err) {
       console.error('Error booking appointment:', err);
       toast({
@@ -155,7 +175,7 @@ export default function SetAppointmentPage() {
                   {/* <AvatarFallback>{doctor.name.charAt(0)}</AvatarFallback> */}
                 </Avatar>
                 <div>
-                  <CardTitle className="text-xl">{doctor.name}</CardTitle>
+                  <CardTitle className="text-xl">{doctor.firstName} {doctor.lastName}</CardTitle>
                   <Badge variant="outline">{doctor.specialization}</Badge>
                 </div>
               </CardHeader>

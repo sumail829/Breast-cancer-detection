@@ -10,30 +10,77 @@ import { StatCard } from '@/components/dashboard/stat-card';
 import DoctorAppointmentsList from '@/components/dashboard/doctor/appointments-list';
 import DoctorPatientList from '@/components/dashboard/doctor/patient-list';
 import DoctorPredictionsChart from '@/components/dashboard/doctor/predictions-chart';
+import axios from 'axios';
 
 export default function DoctorDashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
-   const [doctor, setDoctor] = useState<null | {
-    firstName:string;
-    lastName:string;
+  const [doctor, setDoctor] = useState<null | {
+    firstName: string;
+    lastName: string;
     specialization: string;
     department: string;
     patients: string[];
   }>(null);
+   const [appointmentData, setAppointmentData] = useState([])
+useEffect(() => {
+  const storedDoctor = localStorage.getItem("userData");
 
-  useEffect(() => {
-    const storedDoctor = localStorage.getItem("doctorData");
-    if (storedDoctor) {
-      setDoctor(JSON.parse(storedDoctor));
+  if (!storedDoctor) return;
+
+  try {
+    const doctorData = JSON.parse(storedDoctor);
+    const doctorId = doctorData._id;
+    console.log('Doctor ID:', doctorId);
+
+    const fetchDoctor = async () => {
+      try {
+        const res = await axios.get(`http://localhost:4000/api/doctor/${doctorId}`);
+        console.log("Doctor's data:", res.data);
+        setDoctor(res.data);
+
+        // ✅ Delete doctorData after successful fetch
+        // localStorage.removeItem("doctorData");
+      } catch (error) {
+        console.error("Error fetching doctor data:", error);
+      }
+    };
+
+    
+
+    fetchDoctor();
+  } catch (error) {
+    console.error("Invalid JSON in doctorData:", error);
+    // localStorage.removeItem("doctorData"); // Clean corrupted data
+  }
+}, []);
+
+ useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('userData') || '{}');
+    console.log("Doctor Data from localStorage:", user);
+    if (user?.role === 'doctor') {
+      const doctorId = user._id;
+      const fetchAppoointmentById = async () => {
+        try {
+          const res = await axios.get(`http://localhost:4000/api/appointments/doctor/${doctorId}`)
+          console.log(res.data.DoctorAppo, "This is appointment data");
+          setAppointmentData(res.data.DoctorAppo)
+        } catch (error) {
+          console.log("Something went wrong", error)
+        }
+      }
+      fetchAppoointmentById();
+  
     }
-  }, []);
+  }, [])
+
+ 
 
   return (
     <div className="flex flex-col space-y-6">
       <div className="flex flex-col space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Doctor Dashboard</h1>
         <p className="text-muted-foreground">
-            {doctor ? `Welcome back, Dr. ${doctor.firstName} ${doctor.lastName}!` : "Loading..."}
+          {doctor ? `Welcome back, Dr. ${doctor.firstName} ${doctor.lastName}!` : "Loading..."}
         </p>
       </div>
 
@@ -193,7 +240,7 @@ export default function DoctorDashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
-                  <StatCard 
+                  <StatCard
                     title="Patients Seen"
                     value="267"
                     trend={{
@@ -202,7 +249,7 @@ export default function DoctorDashboardPage() {
                       positive: true
                     }}
                   />
-                  <StatCard 
+                  <StatCard
                     title="Average Rating"
                     value="4.8/5"
                     trend={{
@@ -211,7 +258,7 @@ export default function DoctorDashboardPage() {
                       positive: true
                     }}
                   />
-                  <StatCard 
+                  <StatCard
                     title="Detection Accuracy"
                     value="97.2%"
                     trend={{
@@ -220,7 +267,7 @@ export default function DoctorDashboardPage() {
                       positive: true
                     }}
                   />
-                  <StatCard 
+                  <StatCard
                     title="Response Time"
                     value="2h 15m"
                     trend={{
@@ -236,11 +283,11 @@ export default function DoctorDashboardPage() {
         </TabsContent>
 
         <TabsContent value="appointments" className="space-y-4">
-          <DoctorAppointmentsList />
+          <DoctorAppointmentsList doctorsData={appointmentData} />
         </TabsContent>
 
         <TabsContent value="patients" className="space-y-4">
-          <DoctorPatientList />
+          <DoctorPatientList patientData={appointmentData}/>
         </TabsContent>
       </Tabs>
     </div>

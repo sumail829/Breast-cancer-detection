@@ -235,7 +235,7 @@ export default function PatientDashboardPage() {
                       <Link href="/patient/test-results">View Report</Link>
                     </Button>
                     <Button className="flex-1" asChild>
-                      <Link href="/patient/payment">New Screening</Link>
+                      <Link href="/patient/cancer">New Screening</Link>
                     </Button>
                   </div>
                 </div>

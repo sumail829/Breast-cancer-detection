@@ -11,6 +11,8 @@ import DoctorAppointmentsList from '@/components/dashboard/doctor/appointments-l
 import DoctorPatientList from '@/components/dashboard/doctor/patient-list';
 import DoctorPredictionsChart from '@/components/dashboard/doctor/predictions-chart';
 import axios from 'axios';
+import { format } from "date-fns";
+
 
 export default function DoctorDashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -21,59 +23,70 @@ export default function DoctorDashboardPage() {
     department: string;
     patients: string[];
   }>(null);
-   const [appointmentData, setAppointmentData] = useState([])
-useEffect(() => {
-  const storedDoctor = localStorage.getItem("userData");
+  const [appointmentData, setAppointmentData] = useState([])
+  useEffect(() => {
+    const storedDoctor = localStorage.getItem("userData");
 
-  if (!storedDoctor) return;
+    if (!storedDoctor) return;
 
-  try {
-    const doctorData = JSON.parse(storedDoctor);
-    const doctorId = doctorData._id;
-    console.log('Doctor ID:', doctorId);
+    try {
+      const doctorData = JSON.parse(storedDoctor);
+      const doctorId = doctorData._id;
+      console.log('Doctor ID:', doctorId);
 
-    const fetchDoctor = async () => {
-      try {
-        const res = await axios.get(`http://localhost:4000/api/doctor/${doctorId}`);
-        console.log("Doctor's data:", res.data);
-        setDoctor(res.data);
-
-        // ✅ Delete doctorData after successful fetch
-        // localStorage.removeItem("doctorData");
-      } catch (error) {
-        console.error("Error fetching doctor data:", error);
-      }
-    };
-
-    
-
-    fetchDoctor();
-  } catch (error) {
-    console.error("Invalid JSON in doctorData:", error);
-    // localStorage.removeItem("doctorData"); // Clean corrupted data
-  }
-}, []);
-
- useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('userData') || '{}');
-    console.log("Doctor Data from localStorage:", user);
-    if (user?.role === 'doctor') {
-      const doctorId = user._id;
-      const fetchAppoointmentById = async () => {
+      const fetchDoctor = async () => {
         try {
-          const res = await axios.get(`http://localhost:4000/api/appointments/doctor/${doctorId}`)
-          console.log(res.data.DoctorAppo, "This is appointment data");
-          setAppointmentData(res.data.DoctorAppo)
-        } catch (error) {
-          console.log("Something went wrong", error)
-        }
-      }
-      fetchAppoointmentById();
-  
-    }
-  }, [])
+          const res = await axios.get(`http://localhost:4000/api/doctor/${doctorId}`);
+          console.log("Doctor's data:", res.data);
+          setDoctor(res.data);
 
- 
+          // ✅ Delete doctorData after successful fetch
+          // localStorage.removeItem("doctorData");
+        } catch (error) {
+          console.error("Error fetching doctor data:", error);
+        }
+      };
+
+
+
+      fetchDoctor();
+    } catch (error) {
+      console.error("Invalid JSON in doctorData:", error);
+      // localStorage.removeItem("doctorData"); // Clean corrupted data
+    }
+  }, []);
+
+  const fetchAppoointmentById = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('userData') || '{}');
+      const doctorId = user._id;
+      const res = await axios.get(`http://localhost:4000/api/appointments/doctor/${doctorId}`);
+      console.log(res.data.DoctorAppo, "This is appointment data");
+      setAppointmentData(res.data.DoctorAppo);
+    } catch (error) {
+      console.log("Something went wrong", error);
+    }
+  };
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('userData') || '{}');
+    if (user?.role === 'doctor') {
+      fetchAppoointmentById();
+    }
+  }, []);
+
+  // Get today's date as YYYY-MM-DD string
+const today = new Date();
+const todayString = format(today, "yyyy-MM-dd");
+
+// Filter appointments for today
+const todaysAppointments = appointmentData.filter((appointment) => {
+  const appointmentDate = new Date(appointment.date); // assuming `appointment.date` is a valid date string
+  const appointmentDateString = format(appointmentDate, "yyyy-MM-dd");
+  return appointmentDateString === todayString;
+});
+
+
 
   return (
     <div className="flex flex-col space-y-6">
@@ -95,7 +108,7 @@ useEffect(() => {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <DashboardCard
               title="Total Patients"
-              value={doctor?.patients?.length ?? 0}
+              value={appointmentData.length}
               description="under your care"
               icon={<UserIcon className="h-4 w-4 text-muted-foreground" />}
               trend={{ value: 4, isPositive: true }}
@@ -130,57 +143,37 @@ useEffect(() => {
                 <CardTitle>Upcoming Appointments</CardTitle>
                 <CardDescription>Your schedule for today</CardDescription>
               </CardHeader>
+
               <CardContent className="space-y-4">
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between space-x-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="font-mono text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                        09:30 AM
+                  {appointmentData.map((appointment) => (
+                    <div
+                      key={appointment._id}
+                      className="flex items-center justify-between space-x-4"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className="font-mono text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                          {appointment.date}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">{appointment.patientId.firstName}  {appointment.patientId.lastName}</p>
+                          <p className="text-xs text-muted-foreground">{appointment.notes}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium">Emily Richards</p>
-                        <p className="text-xs text-muted-foreground">Routine Checkup</p>
-                      </div>
+                      <Button variant="ghost" size="sm">
+                        View
+                      </Button>
                     </div>
-                    <Button variant="ghost" size="sm">
-                      View
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-between space-x-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="font-mono text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                        10:15 AM
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Michael Thompson</p>
-                        <p className="text-xs text-muted-foreground">Follow-up Visit</p>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="sm">
-                      View
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-between space-x-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="font-mono text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                        11:30 AM
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Sarah Williams</p>
-                        <p className="text-xs text-muted-foreground">Cancer Screening</p>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="sm">
-                      View
-                    </Button>
-                  </div>
+                  ))}
                 </div>
+
                 <Button variant="outline" size="sm" className="w-full">
                   <PlusIcon className="mr-2 h-4 w-4" />
                   Schedule Appointment
                 </Button>
               </CardContent>
             </Card>
+
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -283,11 +276,14 @@ useEffect(() => {
         </TabsContent>
 
         <TabsContent value="appointments" className="space-y-4">
-          <DoctorAppointmentsList doctorsData={appointmentData} />
+          <DoctorAppointmentsList
+            doctorsData={appointmentData}
+            onRefresh={fetchAppoointmentById}
+          />
         </TabsContent>
 
         <TabsContent value="patients" className="space-y-4">
-          <DoctorPatientList patientData={appointmentData}/>
+          <DoctorPatientList patientData={appointmentData} />
         </TabsContent>
       </Tabs>
     </div>

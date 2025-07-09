@@ -38,23 +38,31 @@ export default function DashboardHeader({ onMenuButtonClick, userRole }: Dashboa
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('userData') || '{}');
-    console.log("Doctor Data from localStorage:", user);
-    if (user?.role === 'doctor') {
-      const doctorId = user._id;
+  const user = JSON.parse(localStorage.getItem('userData') || '{}');
+  if (!user || !user._id || !user.role) return;
 
-      const fetchNotifications = async () => {
-        try {
-          const res = await axios.get(`http://localhost:4000/api/notification/${doctorId}`);
-          setNotifications(res.data.notifications);
-        } catch (error) {
-          console.error('Failed to load notifications', error);
-        }
-      };
+  const fetchNotifications = async () => {
+    try {
+      let url = "";
 
-      fetchNotifications();
+      if (user.role === 'doctor') {
+        url = `http://localhost:4000/api/notification/${user._id}`;
+      } else if (user.role === 'patient') {
+        url = `http://localhost:4000/api/notification/patient/${user._id}`;
+      } else {
+        return; // ⛔ Admin has no notifications (for now)
+      }
+
+      const res = await axios.get(url);
+      setNotifications(res.data.notifications);
+    } catch (error) {
+      console.error('Failed to load notifications', error);
     }
-  }, []);
+  };
+
+  fetchNotifications();
+}, []);
+
   const handleLogout = () => {
     // In a real app, you would handle actual logout logic here
     logout(); // clear context + localStorage

@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/table";
 import { Appointment } from '@/lib/types';
 import axios from 'axios';
+import { toast } from '@/hooks/use-toast';
 
 // Dummy data
 const appointments: Appointment[] = [
@@ -104,9 +105,16 @@ const patients = {
   p7: "Jennifer Lee",
 };
 
-export default function DoctorAppointmentsList({doctorsData}:{doctorsData:any}) {
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [status, setStatus] = useState<"all" | "scheduled" | "completed" | "cancelled">("all");
+export default function DoctorAppointmentsList({
+  doctorsData,
+  onRefresh,
+}: {
+  doctorsData: any[],
+  onRefresh: () => void
+}) {
+  console.log(doctorsData,"its doctor data")
+  // const [date, setDate] = useState<Date | undefined>(new Date());
+  // const [status, setStatus] = useState<"all" | "scheduled" | "completed" | "cancelled">("all");
 //   const [appointmentData, setAppointmentData] = useState([])
 
 
@@ -142,13 +150,34 @@ const filteredNotifications = doctorsData; // <-- test this first
 
   //   return dateMatches;
   // });
-  const handleDeleteAppointment=async()=>{
-    try {
-      const deleteAppointment=await axios.delete("")
-    } catch (error) {
-      
-    }
+const handleDeleteAppointment = async (id: string) => {
+  try {
+    await axios.delete(`http://localhost:4000/api/appointments/delete/${id}`);
+    console.log("Appointment deleted successfully");
+    onRefresh(); // ✅ Refresh data in parent after deletion
+  } catch (error) {
+    console.error("Error deleting appointment", error);
   }
+};
+
+const handleAccept = async (notif: any) => {
+  try {
+    await axios.post("http://localhost:4000/api/appointments/accept", {
+      doctorId: notif.doctorId._id || notif.doctorId,
+      patientId: notif.patientId._id || notif.patientId,
+      originalNotificationId: notif._id
+    });
+
+    toast({
+      title: "Accepted",
+      description: "Patient has been notified.",
+    });
+
+    onRefresh(); // 🔄 Refresh list
+  } catch (err) {
+    console.error("Error accepting appointment:", err);
+  }
+};
 
   return (
     <div className="flex gap-4 md:grid-cols-[300px_1fr]">
@@ -332,8 +361,8 @@ const filteredNotifications = doctorsData; // <-- test this first
                       )}
                     </TableCell>
                     <TableCell className='text-right space-x-1'>
-                       <Button>Accept</Button>
-                       <Button>Delete</Button>
+                       <Button onClick={() => handleAccept(notif)}>Accept</Button>
+                       <Button onClick={() => handleDeleteAppointment(notif._id)}>Delete</Button>
                     </TableCell>
                   </TableRow>
                 ))}

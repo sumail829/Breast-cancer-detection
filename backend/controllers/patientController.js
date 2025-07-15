@@ -5,12 +5,13 @@ const upload = multer({ dest: 'uploads/' })
 import axios from "axios";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken"
+import 'dotenv/config';
 
 
 cloudinary.config({
-    cloud_name: "dnhun2a8m",
-    api_key: "418397955729357",
-    api_secret: "-4W76HpN8R9DU03vEabY9BgfuMM"
+    cloud_name: process.env.CLOUDINARY_NAME,
+    api_key: process.env.API_KEY,
+    api_secret: process.env.API_SECRET
 })
 
 export const createPatient = async (req, res) => {

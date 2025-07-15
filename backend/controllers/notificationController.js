@@ -17,6 +17,21 @@ export const getDoctorNotifications = async (req, res) => {
 
 };
 
+
+export const getPatientNotifications = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+
+    const notifications = await Notification.find({ recipient: patientId }).sort({ createdAt: -1 });
+
+    return res.status(200).json({ notifications });
+  } catch (error) {
+  console.log("Something went wrong",error);
+  return res.status(500).json({ message: "Internal server error" });
+}
+
+};
+
 export const createNotification = async (req, res) => {
   try {
     const { recipient, sender, type, title, message, relatedEntity } = req.body;
@@ -38,8 +53,20 @@ export const createNotification = async (req, res) => {
 
     const savedNotification = await newNotification.save();
     res.status(201).json({ message: "Notification created", notification: savedNotification });
+
   } catch (error) {
     console.error("Error creating notification:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const deleteNotification= async (req,res)=>{
+  try {
+       const { doctorId } = req.params;
+    const deleteAppointmentnotify=await Notification.findByIdAndDelete({recipient:doctorId})
+    return res.status(200).json({message:"notification deleted successfully",deleteAppointmentnotify})
+  } catch (error) {
+      console.error("Error creating notification:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}

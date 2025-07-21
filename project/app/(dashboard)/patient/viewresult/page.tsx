@@ -9,7 +9,8 @@ export default function ViewResult() {
   useEffect(() => {
     const fetchMedicalReport = async () => {
       try {
-        const currentPatientId = localStorage.getItem("patientId"); // or from context/auth
+       const user = JSON.parse(localStorage.getItem('userData') || '{}');
+    const currentPatientId = user._id // or from context/auth
         if (!currentPatientId) {
           console.warn("❌ No patient ID found in localStorage.");
           return;

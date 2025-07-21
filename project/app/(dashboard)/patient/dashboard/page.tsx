@@ -15,7 +15,6 @@ import {
   Microscope
 } from 'lucide-react';
 import { DashboardCard } from '@/components/dashboard/dashboard-card';
-import { Progress } from "@/components/ui/progress";
 import PatientAppointments from '@/components/dashboard/patient/patient-appointments';
 import PatientTestResultsList from '@/components/dashboard/patient/patient-test-results';
 import Link from 'next/link';
@@ -26,19 +25,33 @@ export default function PatientDashboardPage() {
   const [viewhistory, setViewHistory] = useState<any>(null);
 
   useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('userData') || '{}');
+    const currentPaientId = user._id
     const fetchMedicalHistory = async () => {
       try {
-        const currentPatientId = localStorage.getItem("patientId");
-        const res = await axios.get(`http://localhost:4000/api/patients/${currentPatientId}`);
+
+        const res = await axios.get(`http://localhost:4000/api/patients/${currentPaientId}`);
         console.log(res.data, "this is patient medical data");
         const patient = res.data.patients;
         setViewHistory(patient);
+
       } catch (error) {
         console.log("something went wrong", error);
       }
     };
+    const fetchAll = async () => {
+      try {
+        const mediacalData = await axios.get(`http://localhost:4000/api/records/patient/${currentPaientId}`);
+        console.log(mediacalData, "This is the detail information of patient with medical report");
+      } catch (error) {
+        console.log("something went wrong", error);
+      }
+    }
+
     fetchMedicalHistory();
+    fetchAll();
   }, []);
+
 
 
 

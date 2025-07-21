@@ -8,7 +8,9 @@ export default function page() {
     useEffect(() => {
   const fetchMedicalReport = async () => {
     try {
-      const currentPatientId = localStorage.getItem("patientId");
+     const user = JSON.parse(localStorage.getItem('userData') || '{}');
+    const currentPatientId = user._id
+    console.log(currentPatientId,"thjs is patient id")
       if (!currentPatientId) {
         console.warn("❌ No patient ID found in localStorage.");
         return;
@@ -17,6 +19,7 @@ export default function page() {
       const res = await axios.get(`http://localhost:4000/api/records/patient/${currentPatientId}`);
       const allReports = res.data.records;
       console.log("📋 All Reports:", allReports);
+      console.log("reports",res.data)
 
       setReports(allReports); // ✅ Set all reports in state
     } catch (error) {

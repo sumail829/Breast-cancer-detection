@@ -30,80 +30,80 @@ import axios from 'axios';
 import { toast } from '@/hooks/use-toast';
 
 // Dummy data
-const appointments: Appointment[] = [
-  {
-    id: "1",
-    patientId: "p1",
-    doctorId: "d1",
-    date: new Date(2025, 3, 15, 10, 30),
-    status: "scheduled",
-    notes: "Regular checkup",
-    createdAt: new Date(2025, 3, 10),
-  },
-  {
-    id: "2",
-    patientId: "p2",
-    doctorId: "d1",
-    date: new Date(2025, 3, 15, 11, 30),
-    status: "scheduled",
-    notes: "Following up on test results",
-    createdAt: new Date(2025, 3, 10),
-  },
-  {
-    id: "3",
-    patientId: "p3",
-    doctorId: "d1",
-    date: new Date(2025, 3, 15, 14, 0),
-    status: "scheduled",
-    notes: "Breast cancer screening",
-    createdAt: new Date(2025, 3, 11),
-  },
-  {
-    id: "4",
-    patientId: "p4",
-    doctorId: "d1",
-    date: new Date(2025, 3, 16, 9, 0),
-    status: "scheduled",
-    createdAt: new Date(2025, 3, 12),
-  },
-  {
-    id: "5",
-    patientId: "p5",
-    doctorId: "d1",
-    date: new Date(2025, 3, 16, 10, 0),
-    status: "cancelled",
-    notes: "Patient requested cancellation",
-    createdAt: new Date(2025, 3, 12),
-  },
-  {
-    id: "6",
-    patientId: "p6",
-    doctorId: "d1",
-    date: new Date(2025, 3, 16, 11, 0),
-    status: "completed",
-    notes: "Prescribed medication for hypertension",
-    createdAt: new Date(2025, 3, 13),
-  },
-  {
-    id: "7",
-    patientId: "p7",
-    doctorId: "d1",
-    date: new Date(2025, 3, 17, 14, 30),
-    status: "scheduled",
-    createdAt: new Date(2025, 3, 14),
-  },
-];
+// const appointments: Appointment[] = [
+//   {
+//     id: "1",
+//     patientId: "p1",
+//     doctorId: "d1",
+//     date: new Date(2025, 3, 15, 10, 30),
+//     status: "scheduled",
+//     notes: "Regular checkup",
+//     createdAt: new Date(2025, 3, 10),
+//   },
+//   {
+//     id: "2",
+//     patientId: "p2",
+//     doctorId: "d1",
+//     date: new Date(2025, 3, 15, 11, 30),
+//     status: "scheduled",
+//     notes: "Following up on test results",
+//     createdAt: new Date(2025, 3, 10),
+//   },
+//   {
+//     id: "3",
+//     patientId: "p3",
+//     doctorId: "d1",
+//     date: new Date(2025, 3, 15, 14, 0),
+//     status: "scheduled",
+//     notes: "Breast cancer screening",
+//     createdAt: new Date(2025, 3, 11),
+//   },
+//   {
+//     id: "4",
+//     patientId: "p4",
+//     doctorId: "d1",
+//     date: new Date(2025, 3, 16, 9, 0),
+//     status: "scheduled",
+//     createdAt: new Date(2025, 3, 12),
+//   },
+//   {
+//     id: "5",
+//     patientId: "p5",
+//     doctorId: "d1",
+//     date: new Date(2025, 3, 16, 10, 0),
+//     status: "cancelled",
+//     notes: "Patient requested cancellation",
+//     createdAt: new Date(2025, 3, 12),
+//   },
+//   {
+//     id: "6",
+//     patientId: "p6",
+//     doctorId: "d1",
+//     date: new Date(2025, 3, 16, 11, 0),
+//     status: "completed",
+//     notes: "Prescribed medication for hypertension",
+//     createdAt: new Date(2025, 3, 13),
+//   },
+//   {
+//     id: "7",
+//     patientId: "p7",
+//     doctorId: "d1",
+//     date: new Date(2025, 3, 17, 14, 30),
+//     status: "scheduled",
+//     createdAt: new Date(2025, 3, 14),
+//   },
+// ];
 
-// Patient data to display names
-const patients = {
-  p1: "Emily Richards",
-  p2: "John Smith",
-  p3: "Maria Garcia",
-  p4: "David Kim",
-  p5: "Sarah Johnson",
-  p6: "Michael Thompson",
-  p7: "Jennifer Lee",
-};
+// // Patient data to display names
+// const patients = {
+//   p1: "Emily Richards",
+//   p2: "John Smith",
+//   p3: "Maria Garcia",
+//   p4: "David Kim",
+//   p5: "Sarah Johnson",
+//   p6: "Michael Thompson",
+//   p7: "Jennifer Lee",
+// };
 
 export default function DoctorAppointmentsList({
   doctorsData,
@@ -174,6 +174,14 @@ const handleAccept = async (notif: any) => {
     });
 
     onRefresh(); // 🔄 Refresh list
+  } catch (err) {
+    console.error("Error accepting appointment:", err);
+  }
+};
+
+const handleUpdate=async(notif:any)=>{
+  try {
+
   } catch (err) {
     console.error("Error accepting appointment:", err);
   }
@@ -363,6 +371,7 @@ const handleAccept = async (notif: any) => {
                     <TableCell className='text-right space-x-1'>
                        <Button onClick={() => handleAccept(notif)}>Accept</Button>
                        <Button onClick={() => handleDeleteAppointment(notif._id)}>Delete</Button>
+                       {/* <Button onClick={()=> handleUpdate(notif.id)}></Button> */}
                     </TableCell>
                   </TableRow>
                 ))}

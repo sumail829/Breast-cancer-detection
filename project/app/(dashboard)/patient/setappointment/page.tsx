@@ -93,7 +93,7 @@ export default function SetAppointmentPage() {
 
     try {
       // Get patient info from local storage or context
-      const patientDataStr = localStorage.getItem('patientData');
+      const patientDataStr = localStorage.getItem('userData');
       if (!patientDataStr) {
         // handle not logged in (toast + redirect)
         return;

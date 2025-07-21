@@ -75,6 +75,7 @@ export default function RegisterPage() {
           break;
         case 'patient':
           endpoint= "http://localhost:4000/api/patients/signup";
+          
           break;
       }
       console.log("Login API endpoint:", endpoint);
@@ -89,8 +90,8 @@ export default function RegisterPage() {
         title: 'Registration successful',
         description: 'Your account has been created. You can now log in.',
       });
-
-      router.push('/login');
+      localStorage.setItem("otpEmail", formData.email);
+      router.push('/verify-otp');
     } catch (error: any) {
       toast({
         variant: 'destructive',

@@ -1,10 +1,11 @@
 import express from "express";
-import { createPatient, deleteSinglePatients, getAllPatients, getSinglePatients, imageUpload, loginPatient, updateSinglePatients } from "../controllers/patientController.js";
+import { createPatient, deleteSinglePatients, getAllPatients, getSinglePatients, imageUpload, loginPatient, updateSinglePatients, verifyPatientOtp } from "../controllers/patientController.js";
 import { assignDoctor } from "../controllers/assignDoctor.js";
 
 const router = express.Router();
 
 router.post("/patients/signup", createPatient);
+router.post("/patients/verify-otp", verifyPatientOtp);
 router.post("/patients/login",loginPatient);
 router.post("/patients/uploadImage", imageUpload)
 router.get("/patients",getAllPatients);

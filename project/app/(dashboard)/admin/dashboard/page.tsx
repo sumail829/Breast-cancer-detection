@@ -1,25 +1,41 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Activity, 
-  Calendar, 
-  FileCheck, 
-  User, 
-  Users, 
-  TrendingUp, 
+import {
+  Activity,
+  Calendar,
+  FileCheck,
+  User,
+  Users,
+  TrendingUp,
   TrendingDown,
-  AlertTriangle 
+  AlertTriangle
 } from 'lucide-react';
 import { DashboardCard } from '@/components/dashboard/dashboard-card';
 import AdminActivityChart from '@/components/dashboard/admin/activity-chart';
 import AdminRecentActivity from '@/components/dashboard/admin/recent-activity';
 import AdminPredictionsOverview from '@/components/dashboard/admin/predictions-overview';
+import Link from 'next/link';
 
 export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [doctorCount, setDoctorCount] = useState(0);
+
+  useEffect(() => {
+    const fetchDoctorCount = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/doctor/count`);
+        const data = await res.json();
+        setDoctorCount(data.count); // OR data.length if using /doctors
+      } catch (error) {
+        console.error('Error fetching doctor count:', error);
+      }
+    };
+
+    fetchDoctorCount();
+  }, []);
 
   return (
     <div className="flex flex-col space-y-6">
@@ -39,13 +55,15 @@ export default function AdminDashboardPage() {
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <DashboardCard
-              title="Total Doctors"
-              value="42"
-              description="since last month"
-              icon={<User className="h-4 w-4 text-muted-foreground" />}
-              trend={{ value: 12, isPositive: true }}
-            />
+            <Link href="/admin/allDoctors" className="hover:cursor-pointer">
+              <DashboardCard
+                title="Total Doctors"
+                value={doctorCount.toString()}
+                description="since last month"
+                icon={<User className="h-4 w-4 text-muted-foreground" />}
+                trend={{ value: 12, isPositive: true }}
+              />
+            </Link>
             <DashboardCard
               title="Total Patients"
               value="2,854"

@@ -25,7 +25,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Appointment } from '@/lib/types';
 import axios from 'axios';
 import { toast } from '@/hooks/use-toast';
 

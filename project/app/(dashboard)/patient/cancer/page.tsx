@@ -1,6 +1,7 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useAdminData } from '@/app/context/AdminDataContext';
 
 export default function CancerDetection() {
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -48,6 +49,15 @@ export default function CancerDetection() {
     }
   };
 
+  // useEffect(()=>{
+  //   const fetchResult=async()=>{
+  //     try {
+  //       const res=await axios.get()
+  //     } catch (error) {
+        
+  //     }
+  //   }
+  // })
   // Function to format confidence percentage
   const formatConfidence = (confidence: number) => {
     // Convert negative confidence to positive and scale to percentage

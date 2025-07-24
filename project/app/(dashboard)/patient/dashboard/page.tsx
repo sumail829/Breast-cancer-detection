@@ -23,6 +23,7 @@ import axios from 'axios';
 export default function PatientDashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [viewhistory, setViewHistory] = useState<any>(null);
+  const [patientData,setPatientData]=useState([]);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('userData') || '{}');
@@ -42,7 +43,8 @@ export default function PatientDashboardPage() {
     const fetchAll = async () => {
       try {
         const mediacalData = await axios.get(`http://localhost:4000/api/records/patient/${currentPaientId}`);
-        console.log(mediacalData, "This is the detail information of patient with medical report");
+        console.log(mediacalData.data.records, "This is the detail information of patient with medical report");
+        setPatientData(mediacalData.data.records[0])
       } catch (error) {
         console.log("something went wrong", error);
       }
@@ -74,7 +76,7 @@ export default function PatientDashboardPage() {
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <DashboardCard
+            {/* <DashboardCard
               title="Upcoming Appointments"
               value="2"
               description="Next: April 15, 2025"
@@ -86,20 +88,20 @@ export default function PatientDashboardPage() {
               value="12"
               description="Last updated: 3 days ago"
               icon={<FileTextIcon className="h-4 w-4 text-muted-foreground" />}
-            />
-            <DashboardCard
+            /> */}
+            {/* <DashboardCard
               title="Test Results"
               value="5"
               description="2 new since last visit"
               icon={<ClipboardIcon className="h-4 w-4 text-muted-foreground" />}
               trend={{ value: 40, isPositive: true }}
-            />
-            <DashboardCard
+            /> */}
+            {/* <DashboardCard
               title="Medications"
               value="3"
               description="Next refill: 7 days"
               icon={<ActivityIcon className="h-4 w-4 text-muted-foreground" />}
-            />
+            /> */}
           </div>
 
           <div className="grid gap-4 grid-cols-1 md:grid-cols-6">
@@ -121,9 +123,9 @@ export default function PatientDashboardPage() {
                   </Avatar>
                   <div className="space-y-1 text-center">
                     <h3 className="text-xl font-medium">
-                      {viewhistory?.doctorId?.firstName ?? 'No Doctor Assigned'}
+                      {patientData?.doctorId?.firstName}  {patientData?.doctorId?.lastName }
                     </h3>
-                    <p className="text-sm text-muted-foreground">Oncologist</p>
+                    <p className="text-sm text-muted-foreground">{patientData?.doctorId?.specialization}</p>
                     <div className="flex items-center justify-center space-x-1 text-yellow-500">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <svg

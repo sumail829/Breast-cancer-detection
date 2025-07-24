@@ -18,6 +18,7 @@ import { UserRole } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/context/AuthContext';
 import axios from 'axios';
+import { AdminDataProvider } from '@/app/context/AdminDataContext';
 
 interface DashboardHeaderProps {
   onMenuButtonClick: () => void;
@@ -28,7 +29,6 @@ type Notification = {
   _id: string;
   message: string;
   createdAt: string;
-  // any other fields you expect
 };
 
 
@@ -36,6 +36,8 @@ export default function DashboardHeader({ onMenuButtonClick, userRole }: Dashboa
   const { user, role, logout } = useAuth();
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  const {patient}=AdminDataProvider
 
   useEffect(() => {
   const user = JSON.parse(localStorage.getItem('userData') || '{}');
@@ -50,9 +52,8 @@ export default function DashboardHeader({ onMenuButtonClick, userRole }: Dashboa
       } else if (user.role === 'patient') {
         url = `http://localhost:4000/api/notification/patient/${user._id}`;
       } else {
-        return; // ⛔ Admin has no notifications (for now)
+        return; 
       }
-
       const res = await axios.get(url);
       setNotifications(res.data.notifications);
     } catch (error) {
@@ -146,9 +147,11 @@ export default function DashboardHeader({ onMenuButtonClick, userRole }: Dashboa
               <Button variant="ghost" className="relative h-8 rounded-full" size="icon">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="" alt="@user" />
+                  
                   <AvatarFallback className="bg-primary text-primary-foreground">
                     {userName.charAt(0)}
                   </AvatarFallback>
+                  
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>

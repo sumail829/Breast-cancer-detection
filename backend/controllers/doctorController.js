@@ -1,31 +1,40 @@
-import doctor from "../models/doctor.js";
+
 import Doctor from "../models/doctor.js";
+import bcrypt from "bcrypt"
+import jwt from "jsonwebtoken"
+import 'dotenv/config';
 
 // ✅ CREATE a doctor
 export const createDoctor = async (req, res) => {
   try {
-    const { specialization, department, phone, patient,email,password,firstName,lastName } = req.body;
+    const { specialization, department, phone, patient, email, password, firstName, lastName } = req.body;
 
-    if (!specialization || !department || !phone || !email ||!password || !firstName ||!lastName) {
+    if (!specialization || !department || !phone || !email || !password || !firstName || !lastName) {
       return res.status(400).json({ message: "All fields are required" });
     }
+    const doctorExists = await Doctor.findOne({ email: email })
+    if (doctorExists) {
+      return res.status(400).json({ message: "Doctor already exists" })
+    }
 
+    const salt = await bcrypt.genSalt(10);
+    const hashedpassword = await bcrypt.hash(password, salt);
     const newDoctor = new Doctor({
       specialization,
       firstName,
       lastName,
       email,
-      password,
+      password: hashedpassword,
       department,
       phone,
-      patients: patient ? [patient] : [],
+      patients: patient ? [patient.fullName] : [],
     });
 
     const doctor = await newDoctor.save();
 
     res.status(201).json({
       message: "Doctor created successfully",
-      doctor,
+      doctor
     });
   } catch (error) {
     console.error("Error creating doctor:", error);
@@ -35,20 +44,23 @@ export const createDoctor = async (req, res) => {
 
 export const loginDoctor = async (req, res) => {
   try {
-    const {email,password}=req.body;
-    if(!email || !password){
-      return res.status(400).json({message:"Email and password are required"})
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" })
     }
-    const doctor=await Doctor.findOne({email:email})
-    if(!doctor){
-      return res.status(404).json({message:"No doctor found"});
+    const doctor = await Doctor.findOne({ email: email })
+    if (!doctor) {
+      return res.status(404).json({ message: "No doctor found" });
     }
-    if(doctor.password!=password){
-      return res.status(404).json({message:"Password is incorrect"});
+    const isMatch = await bcrypt.compare(password, doctor.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credential" });
     }
-    return res.status(200).json({message:"Login successful",doctor});
+    const token = jwt.sign({ id: doctor._id, role: doctor.role }, process.env.JWT_SECRET, { expiresIn: "30d" });
+    const { password: _, ...doctorWithoutPassword } = doctor._doc; // Exclude password from response
+    return res.status(200).json({ message: "Login successful",token, doctor:doctorWithoutPassword });
   } catch (error) {
-     console.error("Error Login doctor:", error);
+    console.error("Error Login doctor:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 }
@@ -57,7 +69,10 @@ export const loginDoctor = async (req, res) => {
 export const getAllDoctors = async (req, res) => {
   try {
     const doctors = await Doctor.find();
-    res.status(200).json(doctors);
+    if(!doctors){
+      return res.status(404).json({message:"No doctor found"})
+    }
+    res.status(200).json({message:"doctor fetched successfully",doctors});
   } catch (error) {
     console.error("Error fetching doctors:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -66,6 +81,8 @@ export const getAllDoctors = async (req, res) => {
 
 // ✅ READ one doctor by ID
 export const getDoctorById = async (req, res) => {
+  // const userid = req.user.userId
+  console.log(JSON.stringify(req.params))
   try {
     const doctor = await Doctor.findById(req.params.id).populate("patients");
 

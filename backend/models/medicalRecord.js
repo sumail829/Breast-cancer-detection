@@ -6,7 +6,10 @@ const medicalRecordSchema = new mongoose.Schema({
   diagnosis: { type: String, required: true },
   prescription: String,
   notes: String,
-  date: { type: Date, default: Date.now }
-});
+  date: { type: Date, default: Date.now },
+  diagnosisResult: { type: String, enum: ["Benign", "Malignant", "Pending"], default: "Pending" },
+  predictionConfidence: Number,
+  predictionDate: Date
+}, { timestamps: true });
 
 export const MedicalRecord = mongoose.model("medicalRecord", medicalRecordSchema);

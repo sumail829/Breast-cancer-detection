@@ -6,12 +6,13 @@ import {
     getRecordsByDoctor,
     getSingleRecord,
     updateMedicalRecord,
-    deleteMedicalRecord
+    deleteMedicalRecord,
 } from "../controllers/medicalRecordController.js";
 
 const router = express.Router();
 
 router.post("/records/create", createMedicalReport);
+
 router.get("/records", getAllMedicalRecords);
 router.get("/records/patient/:patientId", getRecordsByPatient);
 router.get("/records/doctor/:doctorId", getRecordsByDoctor);

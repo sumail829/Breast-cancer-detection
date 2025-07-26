@@ -9,7 +9,7 @@ const DoctorSchema = new mongoose.Schema({
   department: { type: String, required: true },
   phone: { type: String, required: true },
   patients: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Patient' }],
-   role: {
+  role: {
     type: String,
     default: "doctor",
     enum: ["doctor"],

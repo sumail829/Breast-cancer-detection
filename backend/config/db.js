@@ -1,21 +1,15 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 
-// Load environment variables from .env
 dotenv.config();
 
-const connectDB = async () => {
+const connectDB=async()=>{
     try {
-        const mongoURI = process.env.MONGO_URI;
-        if (!mongoURI) {
-            throw new Error("MONGO_URI not found in environment variables");
-        }
-
-        await mongoose.connect(mongoURI);
-        console.log("Database connected successfully");
+        await mongoose.connect("mongodb+srv://samirpanjiyar4:1HdyaulcDjEBLUVw@cluster0.dzwtsms.mongodb.net/breastCancer?retryWrites=true&w=majority&appName=Cluster0");
+        console.log("database connection successfull")
     } catch (error) {
-        console.error("Database connection error:", error);
+        console.log("Database connection error",error)
     }
-};
+}
 
-export default connectDB;
+export default connectDB;

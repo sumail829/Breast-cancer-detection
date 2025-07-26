@@ -1,9 +1,20 @@
+import { config } from "dotenv";
 import { MedicalRecord } from "../models/medicalRecord.js";
+
 
 // 1. Create Medical Record
 export const createMedicalReport = async (req, res) => {
     try {
-        const { doctorId, patientId, diagnosis, prescription, notes } = req.body;
+        const {
+            doctorId,
+            patientId,
+            diagnosis,
+            prescription,
+            notes,
+            diagnosisResult,
+            predictionConfidence,
+            predictionDate
+        } = req.body;
 
         if (!doctorId || !patientId || !diagnosis || !prescription || !notes) {
             return res.status(400).json({ message: "All fields must be filled" });
@@ -14,17 +25,58 @@ export const createMedicalReport = async (req, res) => {
             patientId,
             diagnosis,
             prescription,
-            notes
+            notes,
+            diagnosisResult,
+            predictionConfidence,
+            predictionDate: predictionDate ? new Date(predictionDate) : undefined
         });
 
-        const savedReport = await newMedicalReport.save();
+        const savedReport = await newMedicalReport.save(); // ✅ fixed
+
         res.status(201).json({ message: "Medical record created", record: savedReport });
 
     } catch (error) {
         console.error("Error creating medical record:", error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ message: "Internal server error", error: error.message || error });
     }
 };
+
+
+// export const imageUpload = [upload.single('imageUrl'), async (req, res) => {    
+//     try {
+//         const recordId = req.params.id;
+//         const img = req.file;
+//         if (!img) return res.status(400).json({ message: "No image file uploaded" });
+//         console.log(req.file, "file");
+//          const response = await cloudinary.uploader.upload(req.file.path);
+//       console.log(response, "response");
+
+//       // Update existing record with image URL
+//       const updatedRecord = await MedicalRecord.findByIdAndUpdate(
+//         recordId,
+//         {
+//           imageUrl: response.secure_url
+//         },
+//         { new: true }
+//       );
+
+//       if (!updatedRecord) {
+//         return res.status(404).json({ message: "Medical record not found" });
+//       }
+
+//       return res.status(200).json({
+//         message: "Image uploaded and record updated",
+//         record: updatedRecord
+//       });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ message: 'Error uploading image or updating record' });
+//     }
+// }
+// ]
+
+
+
 
 // 2. Get All Medical Records
 export const getAllMedicalRecords = async (req, res) => {
@@ -41,7 +93,7 @@ export const getAllMedicalRecords = async (req, res) => {
 export const getRecordsByPatient = async (req, res) => {
     try {
         const { patientId } = req.params;
-        const records = await MedicalRecord.find({ patientId }).populate('doctorId');
+        const records = await MedicalRecord.find({ patientId }).populate('doctorId').sort({ createdAt: -1 });;
         res.status(200).json({ records });
     } catch (error) {
         console.error("Error fetching patient records:", error);

@@ -56,7 +56,7 @@ export const acceptAppointmentRequest = async (req, res) => {
       status: false,
       createdAt: new Date(),
       updatedAt: new Date()
-    }); 
+    });
 
     await acceptedNotification.save();
 
@@ -74,12 +74,30 @@ export const getAllAppointments = async (req, res) => {
       .populate("patientId", "name email")
       .populate("doctorId", "name email specialization");
 
-    res.status(200).json({ message: "Appointments fetched", appointments });
+    // Add dynamic status based on current date
+    const todayNepal = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kathmandu' }); // YYYY-MM-DD
+
+
+    const updatedAppointments = appointments.map(app => {
+      const appointmentNepal = new Date(app.date).toLocaleDateString('en-CA', { timeZone: 'Asia/Kathmandu' });
+
+      let status;
+      if (appointmentNepal < todayNepal) status = "completed";
+      else if (appointmentNepal === todayNepal) status = "ongoing";
+      else status = "upcoming";
+
+      return {
+        ...app._doc,
+        status
+      };
+    });
+
+    res.status(200).json({ message: "Appointments fetched", appointments: updatedAppointments });
+
   } catch (error) {
     console.error("❌ Error creating appointment:", error);
     return res.status(500).json({ message: "Internal server error", error: error.message });
   }
-
 };
 
 // READ Single Appointment
@@ -176,7 +194,7 @@ export const deleteAppointment = async (req, res) => {
 const createNotification = async (notificationData) => {
   try {
     console.log('Creating notification with data:', notificationData);
-    
+
     const notification = new Notification({
       recipient: notificationData.recipient,
       sender: notificationData.sender,

@@ -77,7 +77,6 @@ export const createPatient = async (req, res) => {
   }
 };
 
-
 export const verifyPatientOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -99,21 +98,34 @@ export const verifyPatientOtp = async (req, res) => {
     const data = record.data;
     otpStore.delete(email);
 
-    if (data.assignedDoctor === "") {
-      delete data.assignedDoctor;
+    // 🛡️ Defensive check: ensure no doctor-related fields leak in
+    if (data.role && data.role !== 'patient') {
+      delete data.role;
     }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(data.password, salt);
 
+    // ✅ Safely create Patient by explicitly listing fields
     const newPatient = new Patient({
-      ...data,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      age: data.age,
+      email: data.email,
+      dateOfBirth: data.dateOfBirth,
+      gender: data.gender,
+      bloodGroup: data.bloodGroup,
+      phone: data.phone,
+      address: data.address,
+      emergencyContact: data.emergencyContact,
       password: hashedPassword,
+      assignedDoctor: data.assignedDoctor || null,
     });
 
     const savedPatient = await newPatient.save();
 
     return res.status(201).json({ message: "Patient verified and registered", patient: savedPatient });
+
   } catch (error) {
     console.error("OTP Verification error:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -151,8 +163,9 @@ export const loginPatient = async (req, res) => {
 export const imageUpload = [
   upload.single('imageUrl'),
   async (req, res) => {
+    
     try {
-      const { patientId } = req.body;
+     const patientId = req.user.id;
       const img = req.file;
 
       if (!img) {
@@ -163,7 +176,7 @@ export const imageUpload = [
       console.log(response, "cloudinary response");
 
       const updatedRecord = await Patient.findOneAndUpdate(
-        { patientId },
+   { _id: patientId },    
         { imageUrl: response.secure_url },
         { new: true }
       );

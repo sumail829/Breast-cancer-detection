@@ -10,18 +10,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { BarChart, Calendar, CheckCircle2, FileUp, Microscope, RotateCw, Upload } from "lucide-react";
+import axios from 'axios';
 
 export default function CancerDetectionPage() {
+  const { toast } = useToast();
   const [selectedPatient, setSelectedPatient] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [isPredicting, setIsPredicting] = useState(false);
-  const [predictionResult, setPredictionResult] = useState<null | 'benign' | 'malignant'>(null);
+  const [predictionResult, setPredictionResult] = useState<"malignant" | "benign" | null>(null);
   const [activeTab, setActiveTab] = useState('upload');
+  const [imageFile, setImageFile] = useState<File|null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
-  // Dummy function to simulate file upload
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!selectedPatient) {
       toast({
         variant: "destructive",
@@ -31,19 +34,61 @@ export default function CancerDetectionPage() {
       return;
     }
 
-    setIsUploading(true);
-    
-    // Simulate upload delay
-    setTimeout(() => {
-      setIsUploading(false);
+    if (!imageFile) {
       toast({
-        title: "Upload complete",
-        description: "Patient data has been successfully uploaded",
+        variant: "destructive",
+        title: "Error",
+        description: "Please select an image to upload",
       });
-    }, 2000);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("image", imageFile);
+
+    try {
+      setIsUploading(true);
+      setUploadSuccess(false);
+      
+      console.log("Uploading image:", imageFile.name);
+      console.log("Patient ID:", selectedPatient);
+      
+      const response = await axios.post(
+        `http://localhost:4000/api/records/${selectedPatient}/uploadImage`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      console.log("Upload response:", response.data);
+      setUploadSuccess(true);
+      
+      toast({
+        title: "Upload successful!",
+        description: `Image "${imageFile.name}" uploaded successfully`,
+      });
+      
+    } catch (error) {
+      console.error("Upload failed:", error);
+      if (axios.isAxiosError(error)) {
+        console.error("Error details:", error.response?.data);
+      }
+      
+      toast({
+        variant: "destructive",
+        title: "Upload failed",
+        description: axios.isAxiosError(error)
+          ? error.response?.data?.message || "Something went wrong while uploading the image."
+          : "Something went wrong while uploading the image.",
+      });
+    } finally {
+      setIsUploading(false);
+    }
   };
 
-  // Dummy function to simulate prediction
   const handlePredict = () => {
     if (!selectedPatient) {
       toast({
@@ -54,16 +99,25 @@ export default function CancerDetectionPage() {
       return;
     }
 
+    if (!uploadSuccess) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please upload an image first",
+      });
+      return;
+    }
+
     setIsPredicting(true);
     setPredictionResult(null);
-    
+
     // Simulate prediction delay
     setTimeout(() => {
       setIsPredicting(false);
       // Randomly determine result for demo purposes
       const result = Math.random() > 0.7 ? 'malignant' : 'benign';
       setPredictionResult(result);
-      
+
       toast({
         title: "Prediction complete",
         description: `Cancer prediction result: ${result}`,
@@ -75,6 +129,18 @@ export default function CancerDetectionPage() {
   const resetForm = () => {
     setSelectedPatient('');
     setPredictionResult(null);
+    setImageFile(null);
+    setUploadSuccess(false);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files ? e.target.files[0] : null;
+    setImageFile(file);
+    setUploadSuccess(false); // Reset upload success when new file is selected
+    
+    if (file) {
+      console.log("File selected:", file.name, "Size:", file.size, "Type:", file.type);
+    }
   };
 
   return (
@@ -150,20 +216,49 @@ export default function CancerDetectionPage() {
                   <div className="space-y-2">
                     <Label htmlFor="picture">Upload Mammogram Images</Label>
                     <div className="flex items-center justify-center w-full">
-                      <label 
-                        htmlFor="dropzone-file" 
-                        className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 hover:bg-gray-100"
+                      <label
+                        htmlFor="dropzone-file"
+                        className={`flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer ${
+                          uploadSuccess 
+                            ? 'bg-green-50 border-green-300 dark:bg-green-900/20' 
+                            : 'bg-gray-50 dark:hover:bg-bray-800 hover:bg-gray-100'
+                        }`}
                       >
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <FileUp className="w-8 h-8 mb-4 text-gray-500" />
-                          <p className="mb-2 text-sm text-gray-500">
-                            <span className="font-semibold">Click to upload</span> or drag and drop
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            DICOM, PNG, or JPEG (MAX. 100MB)
-                          </p>
+                          {uploadSuccess ? (
+                            <>
+                              <CheckCircle2 className="w-8 h-8 mb-4 text-green-500" />
+                              <p className="mb-2 text-sm text-green-600">
+                                <span className="font-semibold">Upload successful!</span>
+                              </p>
+                              <p className="text-xs text-green-500">
+                                {imageFile?.name}
+                              </p>
+                            </>
+                          ) : (
+                            <>
+                              <FileUp className="w-8 h-8 mb-4 text-gray-500" />
+                              <p className="mb-2 text-sm text-gray-500">
+                                <span className="font-semibold">Click to upload</span> or drag and drop
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                DICOM, PNG, or JPEG (MAX. 100MB)
+                              </p>
+                              {imageFile && (
+                                <p className="text-xs text-blue-600 mt-2">
+                                  Selected: {imageFile.name}
+                                </p>
+                              )}
+                            </>
+                          )}
                         </div>
-                        <input id="dropzone-file" type="file" className="hidden" />
+                        <Input
+                          id="dropzone-file"
+                          type="file"
+                          className="hidden"
+                          accept=".dcm,.png,.jpg,.jpeg,.dicom"
+                          onChange={handleFileChange}
+                        />
                       </label>
                     </div>
                   </div>
@@ -171,26 +266,35 @@ export default function CancerDetectionPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="notes">Additional Notes</Label>
-                  <Textarea 
-                    id="notes" 
+                  <Textarea
+                    id="notes"
                     placeholder="Enter any relevant notes about the patient's condition"
                     className="min-h-[100px]"
                   />
+                </div>
+
+                {/* Debug Information */}
+                <div className="p-4 bg-gray-100 rounded-lg">
+                  <h4 className="font-semibold mb-2">Debug Info:</h4>
+                  <p className="text-sm">Selected Patient: {selectedPatient || 'None'}</p>
+                  <p className="text-sm">Selected File: {imageFile?.name || 'None'}</p>
+                  <p className="text-sm">File Size: {imageFile ? `${(imageFile.size / 1024 / 1024).toFixed(2)} MB` : 'N/A'}</p>
+                  <p className="text-sm">Upload Status: {uploadSuccess ? 'Success' : 'Pending'}</p>
                 </div>
               </CardContent>
               <CardFooter className="flex justify-between">
                 <Button variant="outline" onClick={resetForm}>Reset</Button>
                 <div className="space-x-2">
-                  <Button 
+                  <Button
                     variant="outline"
-                    disabled={isUploading || !selectedPatient}
+                    disabled={isUploading || !selectedPatient || !imageFile}
                     onClick={handleUpload}
                   >
                     {isUploading && <RotateCw className="mr-2 h-4 w-4 animate-spin" />}
                     {isUploading ? 'Uploading...' : 'Upload Data'}
                   </Button>
-                  <Button 
-                    disabled={isPredicting || !selectedPatient}
+                  <Button
+                    disabled={isPredicting || !selectedPatient || !uploadSuccess}
                     onClick={handlePredict}
                   >
                     {isPredicting && <RotateCw className="mr-2 h-4 w-4 animate-spin" />}
@@ -205,8 +309,8 @@ export default function CancerDetectionPage() {
               <CardHeader>
                 <CardTitle>Prediction Result</CardTitle>
                 <CardDescription>
-                  {predictionResult 
-                    ? 'Analysis complete' 
+                  {predictionResult
+                    ? 'Analysis complete'
                     : 'Waiting for analysis to complete'}
                 </CardDescription>
               </CardHeader>
@@ -218,12 +322,11 @@ export default function CancerDetectionPage() {
                   </div>
                 ) : predictionResult ? (
                   <div className="flex flex-col items-center justify-center space-y-6">
-                    <div 
-                      className={`h-24 w-24 rounded-full flex items-center justify-center ${
-                        predictionResult === 'benign' 
-                          ? 'bg-green-100 text-green-600' 
-                          : 'bg-red-100 text-red-600'
-                      }`}
+                    <div
+                      className={`h-24 w-24 rounded-full flex items-center justify-center ${predictionResult === 'benign'
+                        ? 'bg-green-100 text-green-600'
+                        : 'bg-red-100 text-red-600'
+                        }`}
                     >
                       {predictionResult === 'benign' ? (
                         <CheckCircle2 className="h-12 w-12" />
@@ -237,13 +340,12 @@ export default function CancerDetectionPage() {
                       <h3 className="text-2xl font-bold">
                         {predictionResult === 'benign' ? 'Benign' : 'Malignant'}
                       </h3>
-                      <p className={`${
-                        predictionResult === 'benign' 
-                          ? 'text-green-600' 
-                          : 'text-red-600'
-                      }`}>
-                        {predictionResult === 'benign' 
-                          ? 'No signs of malignancy detected' 
+                      <p className={`${predictionResult === 'benign'
+                        ? 'text-green-600'
+                        : 'text-red-600'
+                        }`}>
+                        {predictionResult === 'benign'
+                          ? 'No signs of malignancy detected'
                           : 'Signs of malignancy detected'}
                       </p>
                       <p className="text-sm text-muted-foreground mt-1">

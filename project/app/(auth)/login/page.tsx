@@ -10,7 +10,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { UserRole } from '@/lib/types';
+
 import axios from "axios";
+import { useAuth } from '@/app/context/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,74 +21,75 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('patient');
   const [isLoading, setIsLoading] = useState(false);
+    const { login } = useAuth(); // ✅ context login
+  
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsLoading(true);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  try {
+    let endpoint = '';
+    switch (role) {
+      case 'patient':
+        endpoint = "http://localhost:4000/api/patients/login";
+        break;
+      case 'doctor':
+        endpoint = "http://localhost:4000/api/doctor/login";
+        break;
+      case 'admin':
+        endpoint = "http://localhost:4000/api/admin/login";
+        break;
+    }
 
-    try {
-      // Simulating API call with timeout
+    const response = await axios.post(endpoint, { email, password });
 
+    const token = response.data?.token;
+    const userData = response.data?.doctor || response.data?.patient || response.data?.admin;
 
-      let endpoint = '';
-      switch (role) {
-        case 'patient':
-          endpoint = "http://localhost:4000/api/patients/login";
-          break;
-        case 'doctor':
-          endpoint = "http://localhost:4000/api/doctor/login";
-          break;
-        case 'admin':
-          endpoint = "http://localhost:4000/api/admin/login";
-          break
-      }
-
-      const response = await axios.post(endpoint, {
-        email, password
-      })
-
-      console.log('Role selected:', role);
-      console.log('Endpoint being used:', endpoint);
-
-
-      // For demo purposes, we'll use simple validation
-      if (email && password) {
-        // Redirect based on role
-        toast({
-          title: 'Login successful',
-          description: `Welcome back, you are logged in as ${role}`,
-        });
-
-        switch (role) {
-          case 'admin':
-            router.push('/admin/dashboard');
-            break;
-          case 'doctor':
-            router.push('/doctor/dashboard');
-            break;
-          case 'patient':
-            router.push('/patient/dashboard');
-            break;
-          default:
-            router.push('/');
-        }
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Login failed',
-          description: 'Please enter valid credentials',
-        });
-      }
-    } catch (error: any) {
+    if (!token || !userData) {
       toast({
         variant: 'destructive',
         title: 'Login failed',
-        description: error?.response?.data?.message || 'An error occurred during login',
+        description: 'Invalid login response (missing token or user)',
       });
-    } finally {
-      setIsLoading(false);
+      return;
     }
-  };
+
+    // Save everything
+    // debugger;
+    //  localStorage.setItem("token", token);
+    //  localStorage.setItem("userRole", role);
+    //  localStorage.setItem("userData", JSON.stringify(userData));
+         login(userData, role, token);
+
+    toast({
+      title: 'Login successful',
+      description: `Welcome back, logged in as ${role}`,
+    });
+
+    // Redirect by role
+    switch (role) {
+      case 'admin':
+        router.push('/admin/dashboard');
+        break;
+      case 'doctor':
+        router.push('/doctor/dashboard');
+        break;
+      case 'patient':
+        router.push('/patient/dashboard');
+        break;
+    }
+
+  } catch (error: any) {
+    toast({
+      variant: 'destructive',
+      title: 'Login failed',
+      description: error?.response?.data?.message || 'An error occurred during login',
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-blue-100 p-4">
@@ -143,7 +146,7 @@ export default function LoginPage() {
             <div className="text-center text-sm">
               Don&apos;t have an account?{' '}
               <Link href="/register" className="text-blue-600 hover:text-blue-800 font-medium">
-                Register
+                Register your account
               </Link>
             </div>
           </CardFooter>

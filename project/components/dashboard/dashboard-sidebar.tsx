@@ -20,6 +20,7 @@ import {
   Heart,
   Settings,
   HelpCircle,
+  Microscope,
 } from 'lucide-react';
 
 interface DashboardSidebarProps {
@@ -122,6 +123,11 @@ export default function DashboardSidebar({ isOpen, onClose, userRole }: Dashboar
       title: 'Appointments',
       href: '/patient/appointments',
       icon: <CalendarDays className="h-5 w-5" />,
+    },
+    {
+      title: 'Cancer Detection',
+      href: '/patient/cancer-detection',
+      icon: <Microscope className="h-5 w-5" />,
     },
     {
       title: 'Medical History',

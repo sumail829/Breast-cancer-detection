@@ -10,11 +10,11 @@ export default function HeroSection() {
         <div className="flex flex-col items-center text-center space-y-8">
           <div className="space-y-4 max-w-3xl">
             <h1 className="text-4xl font-bold tracking-tight text-slate-900 md:text-5xl lg:text-6xl">
-              Hospital Pro
+             HealthAssist Pro
               <span className="text-blue-600"> Healthcare Management</span>
             </h1>
             <p className="text-xl text-slate-700 max-w-2xl mx-auto">
-              Streamline your hospital operations with our comprehensive management system designed for administrators, doctors, and patients.
+              Streamline your hospital operations with our comprehensive management  Solution designed for administrators, doctors, and patients.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">

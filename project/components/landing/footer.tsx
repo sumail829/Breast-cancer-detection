@@ -7,9 +7,9 @@ export default function Footer() {
       <div className="container px-4 md:px-6 max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-2">
-            <h2 className="text-2xl font-bold mb-4">Hospital Pro</h2>
+            <h2 className="text-2xl font-bold mb-4">HealthAssist Pro</h2>
             <p className="text-slate-400 mb-4 max-w-md">
-              A modern hospital management system designed to streamline healthcare operations and improve patient care.
+              A modern hospital management solution designed to streamline healthcare operations and improve patient care.
             </p>
             <div className="flex space-x-4">
               <Link 
@@ -115,7 +115,7 @@ export default function Footer() {
         </div>
         <div className="border-t border-slate-700 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-slate-400">
-            &copy; {new Date().getFullYear()} Hospital Pro. All rights reserved.
+            &copy; {new Date().getFullYear()} HealthAssist Pro. All rights reserved.
           </p>
           <p className="text-slate-400 flex items-center mt-4 md:mt-0">
             Made with <Heart className="h-4 w-4 text-red-500 mx-1" /> for healthcare professionals

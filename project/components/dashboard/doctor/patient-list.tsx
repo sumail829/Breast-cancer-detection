@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,7 +21,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 // Dummy patient data
-const patientData = [
+const patientDatas = [
   {
     id: "p1",
     firstName: "Emily",
@@ -115,8 +115,10 @@ const patientData = [
   },
 ];
 
-export default function DoctorPatientList() {
+export default function DoctorPatientList({patientData}) {
   const [searchQuery, setSearchQuery] = useState('');
+
+
   
   const filteredPatients = patientData.filter(patient => {
     const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase();
@@ -193,27 +195,27 @@ export default function DoctorPatientList() {
                   <div className="flex items-center space-x-3">
                     <Avatar className="h-9 w-9">
                       <AvatarFallback className="bg-primary/10 text-primary">
-                        {patient.firstName[0]}{patient.lastName[0]}
+                        {patient.firstName}{patient.lastName}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <div className="font-medium">{patient.firstName} {patient.lastName}</div>
+                      <div className="font-medium"> {patient.patientId.firstName}{patient.patientId.lastName}</div>
                       <div className="text-xs text-muted-foreground">ID: {patient.id}</div>
                     </div>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div>{patient.age}</div>
+                  <div>{patient.patientId.age}</div>
                   <div className="text-xs text-muted-foreground">
-                    {patient.gender === 'male' ? 'Male' : 'Female'}
+                    {patient.patientId.gender === 'male' ? 'Male' : 'Female'}
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="font-medium">{patient.phone}</div>
-                  <div className="text-xs text-muted-foreground">{patient.email}</div>
+                  <div className="font-medium">{patient.patientId.phone}</div>
+                  <div className="text-xs text-muted-foreground">{patient.patientId.email}</div>
                 </TableCell>
                 <TableCell>{patient.lastVisit}</TableCell>
-                <TableCell>{patient.nextAppointment || "Not scheduled"}</TableCell>
+                <TableCell>{patient.date || "Not scheduled"}</TableCell>
                 <TableCell>
                   {getCancerStatusBadge(patient.cancerStatus) || "Not tested"}
                 </TableCell>

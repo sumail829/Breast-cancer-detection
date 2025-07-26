@@ -3,22 +3,22 @@ import { Card, CardContent } from "@/components/ui/card";
 
 const testimonials = [
   {
-    quote: "Hospital Pro has completely transformed our administrative workflow. We've reduced paperwork by 85% and improved patient satisfaction scores.",
-    author: "Dr. Sarah Johnson",
+    quote: "HealthAssist Pro has completely transformed our administrative workflow. We've reduced paperwork by 85% and improved patient satisfaction scores.",
+    author: "Dr. Saroj uprety",
     role: "Chief Medical Officer",
-    avatar: "SJ"
+    avatar: "SU"
   },
   {
     quote: "As a doctor, the intuitive interface helps me manage my patient appointments and records efficiently, giving me more time to focus on patient care.",
-    author: "Dr. Michael Chen",
+    author: "Dr. Nisha Mahato",
     role: "Cardiologist",
-    avatar: "MC"
+    avatar: "NM"
   },
   {
     quote: "The patient portal is user-friendly and gives me easy access to my appointments and test results. I feel more involved in my healthcare journey.",
-    author: "Robert Wilson",
+    author: "Suraj sah",
     role: "Patient",
-    avatar: "RW"
+    avatar: "ss"
   }
 ];
 
@@ -31,7 +31,7 @@ export default function TestimonialsSection() {
             Trusted by Healthcare Professionals
           </h2>
           <p className="mt-4 text-xl text-slate-600 max-w-2xl mx-auto">
-            See what our users have to say about Hospital Pro
+            See what our users have to say about HealthAssit Pro
           </p>
         </div>
         
@@ -49,7 +49,7 @@ export default function TestimonialsSection() {
                     <path d="M9.352 4C4.456 7.456 1 13.12 1 19.36c0 5.088 3.072 8.064 6.624 8.064 3.36 0 5.856-2.688 5.856-5.856 0-3.168-2.208-5.472-5.088-5.472-.576 0-1.344.096-1.536.192.48-3.264 3.552-7.104 6.624-9.024L9.352 4zm16.512 0c-4.8 3.456-8.256 9.12-8.256 15.36 0 5.088 3.072 8.064 6.624 8.064 3.264 0 5.856-2.688 5.856-5.856 0-3.168-2.304-5.472-5.184-5.472-.576 0-1.248.096-1.44.192.48-3.264 3.456-7.104 6.528-9.024L25.864 4z" />
                   </svg>
                   <p className="relative text-lg text-slate-700 mb-6">
-                    "{testimonial.quote}"
+                    &quot;{testimonial.quote}&quot;
                   </p>
                 </div>
                 <div className="flex items-center mt-6">

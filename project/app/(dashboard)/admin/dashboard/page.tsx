@@ -17,32 +17,128 @@ import { DashboardCard } from '@/components/dashboard/dashboard-card';
 import AdminActivityChart from '@/components/dashboard/admin/activity-chart';
 import AdminRecentActivity from '@/components/dashboard/admin/recent-activity';
 import AdminPredictionsOverview from '@/components/dashboard/admin/predictions-overview';
+import axios from 'axios';
+import { toast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
+import { useAdminData } from '@/app/context/AdminDataContext';
 import Link from 'next/link';
 
 export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
-  const [doctorCount, setDoctorCount] = useState(0);
-
+  const { doctors, patients, appointments } = useAdminData();
+    const [hasMounted, setHasMounted] = useState(false);
+  const [admin, setAdmin] = useState<null | {
+    firstName: string;
+    lastName: string;
+    email: string;
+  }>(null);
+  const router = useRouter();
   useEffect(() => {
-    const fetchDoctorCount = async () => {
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/doctor/count`);
-        const data = await res.json();
-        setDoctorCount(data.count); // OR data.length if using /doctors
-      } catch (error) {
-        console.error('Error fetching doctor count:', error);
-      }
-    };
+     setHasMounted(true); 
+    const storedDoctor = localStorage.getItem("userData");
 
-    fetchDoctorCount();
+    if (!storedDoctor) return;
+
+    try {
+      const adminData = JSON.parse(storedDoctor);
+      const adminId = adminData._id;
+      console.log('admin ID:', adminId);
+
+      const fetchAdmin = async () => {
+        try {
+          const res = await axios.get(`http://localhost:4000/api/admin/${adminId}`);
+          console.log("Admin's data:", res.data);
+          setAdmin(res.data.fetchSingleAdmin);
+
+          // ✅ Delete doctorData after successful fetch
+          // localStorage.removeItem("doctorData");
+        } catch (error) {
+          console.error("Error fetching doctor data:", error);
+        }
+      };
+
+
+
+      fetchAdmin();
+    } catch (error) {
+      console.error("Invalid JSON in doctorData:", error);
+      // localStorage.removeItem("doctorData"); // Clean corrupted data
+    }
   }, []);
+
+
+  if (!hasMounted) return null;
+
+
+
+  // const [doctors, setDoctors] = useState<any[]>([]);
+  // const [patients, setPatients] = useState<any[]>([]);
+  // const [appointment,setAppointment]=useState<any[]>([])
+
+
+  // useEffect(()=>{
+
+  //     const token = localStorage.getItem("token");
+
+  //       if (!token) {
+  //         console.warn("🚫 No token found in localStorage");
+  //         toast({
+  //           title: "Unauthorized",
+  //           description: "Please log in again.",
+  //           variant: "destructive",
+  //         });
+  //         router.push("/login");
+  //         return;
+  //       }
+  //   const fetchAllDoctors=async()=>{
+  //     try {
+  //       const res=await axios.get("http://localhost:4000/api/doctor", {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         }
+  //       });
+  //       console.log(res.data)
+  //       setDoctors(res.data.doctors || []);
+  //     } catch (error) {
+  //       console.log("Something went wrong",error)
+  //     }
+  //   }
+  //   const fetchAllPatients=async()=>{
+  //     try {
+  //       const res=await axios.get("http://localhost:4000/api/patients", {
+  //         headers: {  
+  //           Authorization: `Bearer ${token}`,
+  //         }
+  //       });
+  //       console.log(res.data)
+  //       setPatients(res.data.patients || []);
+  //     } catch (error) {
+  //       console.log("Something went wrong",error)
+  //     }
+  //   }
+  //   const fetchAllAppointment=async()=>{
+  //     try {
+  //       const res=await axios.get("http://localhost:4000/api/appointments");
+  //       console.log(res.data.appointments);
+  //       setAppointment(res.data.appointments)
+  //     } catch (error) {
+  //        console.log("Something went wrong",error)
+  //     }
+  //   }
+  //   fetchAllDoctors();
+  //   fetchAllPatients();
+  //   fetchAllAppointment();
+  // },[])
+
 
   return (
     <div className="flex flex-col space-y-6">
       <div className="flex flex-col space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome back, Admin! Here's what's happening in your hospital today.
+          <p className="text-muted-foreground">
+            Welcome back, {admin?.firstName || 'Admin'}! Here's what's happening in your hospital today.
+          </p>
         </p>
       </div>
 
@@ -55,29 +151,30 @@ export default function AdminDashboardPage() {
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Link href="/admin/allDoctors" className="hover:cursor-pointer">
-              <DashboardCard
-                title="Total Doctors"
-                value={doctorCount.toString()}
-                description="since last month"
-                icon={<User className="h-4 w-4 text-muted-foreground" />}
-                trend={{ value: 12, isPositive: true }}
-              />
-            </Link>
-            <DashboardCard
+            <Link href="../admin/showDoctor"><DashboardCard
+              title="Total Doctors"
+              value={doctors.length}
+              description="since last month"
+              icon={<User className="h-4 w-4 text-muted-foreground" />}
+              trend={{ value: 15, isPositive: true }}
+
+            /></Link>
+            <Link href="../admin/showPatient"> <DashboardCard
               title="Total Patients"
-              value="2,854"
+              value={patients.length}
               description="since last month"
               icon={<Users className="h-4 w-4 text-muted-foreground" />}
               trend={{ value: 8, isPositive: true }}
-            />
-            <DashboardCard
-              title="Appointments"
-              value="482"
-              description="this week"
-              icon={<Calendar className="h-4 w-4 text-muted-foreground" />}
-              trend={{ value: 3, isPositive: true }}
-            />
+            /></Link>
+            <Link href="../admin/showAppointment" className="block">
+              <DashboardCard
+                title="Appointments"
+                value={appointments.length}
+                description="this week"
+                icon={<Calendar className="h-4 w-4 text-muted-foreground" />}
+                trend={{ value: 3, isPositive: true }}
+              />
+            </Link>
             <DashboardCard
               title="Cancer Predictions"
               value="128"
@@ -88,17 +185,17 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="col-span-1 md:col-span-2">
+            <Link href="../admin/showReport"><Card className="col-span-1 md:col-span-2">
               <CardHeader>
-                <CardTitle>Hospital Activity</CardTitle>
-                <CardDescription>User activity over the past 30 days</CardDescription>
+                <CardTitle>Medical Reports</CardTitle>
+                <CardDescription>Reports over the past 30 days</CardDescription>
               </CardHeader>
               <CardContent className="pl-2">
-                <AdminActivityChart />
+                {/* <AdminActivityChart /> */}
               </CardContent>
-            </Card>
+            </Card></Link>
 
-            <Card className="col-span-1">
+            {/* <Card className="col-span-1">
               <CardHeader>
                 <CardTitle>Pending Alerts</CardTitle>
                 <CardDescription>Require your attention</CardDescription>
@@ -134,7 +231,7 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

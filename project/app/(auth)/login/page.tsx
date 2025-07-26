@@ -5,17 +5,14 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import axios from 'axios';
+import { UserRole } from '@/lib/types';
 
-type UserRole = 'admin' | 'doctor' | 'patient';
+import axios from "axios";
+import { useAuth } from '@/app/context/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -24,8 +21,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('patient');
   const [isLoading, setIsLoading] = useState(false);
-
-  const handleLogin = async (e: React.FormEvent) => {
+    const { login } = useAuth(); // ✅ context login
+  
+const handleLogin = async (e: React.FormEvent) => {
   e.preventDefault();
   setIsLoading(true);
 
@@ -33,42 +31,55 @@ export default function LoginPage() {
     let endpoint = '';
     switch (role) {
       case 'patient':
-        endpoint = `${process.env.NEXT_PUBLIC_BACKEND_URL}/patients/login`;
+        endpoint = "http://localhost:4000/api/patients/login";
         break;
       case 'doctor':
-        endpoint = `${process.env.NEXT_PUBLIC_BACKEND_URL}/doctor/login`;
+        endpoint = "http://localhost:4000/api/doctor/login";
         break;
       case 'admin':
-        endpoint = `${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/login`;
+        endpoint = "http://localhost:4000/api/admin/login";
         break;
     }
 
-    const response = await axios.post(
-      endpoint,
-      { email, password },
-      { withCredentials: true }
-    );
+    const response = await axios.post(endpoint, { email, password });
 
-    // 🔁 Always clean and set correct role/email
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('doctorEmail');
-    localStorage.removeItem('patientEmail');
-    localStorage.removeItem('adminEmail');
-    localStorage.setItem('userRole', role);
-    localStorage.setItem(`${role}Email`, email);
+    const token = response.data?.token;
+    const userData = response.data?.doctor || response.data?.patient || response.data?.admin;
+
+    if (!token || !userData) {
+      toast({
+        variant: 'destructive',
+        title: 'Login failed',
+        description: 'Invalid login response (missing token or user)',
+      });
+      return;
+    }
+
+    // Save everything
+    // debugger;
+    //  localStorage.setItem("token", token);
+    //  localStorage.setItem("userRole", role);
+    //  localStorage.setItem("userData", JSON.stringify(userData));
+         login(userData, role, token);
 
     toast({
       title: 'Login successful',
-      description: `Welcome back, you are logged in as ${role}`,
+      description: `Welcome back, logged in as ${role}`,
     });
 
-    const { needVerification } = response.data;
-
-    if (needVerification) {
-      router.push('/verifyOtp');
-    } else {
-      router.push(`/${role}/dashboard`);
+    // Redirect by role
+    switch (role) {
+      case 'admin':
+        router.push('/admin/dashboard');
+        break;
+      case 'doctor':
+        router.push('/doctor/dashboard');
+        break;
+      case 'patient':
+        router.push('/patient/dashboard');
+        break;
     }
+
   } catch (error: any) {
     toast({
       variant: 'destructive',
@@ -80,16 +91,12 @@ export default function LoginPage() {
   }
 };
 
-
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-blue-100 p-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Login to Hospital Pro</CardTitle>
-          <CardDescription className="text-center">
-            Enter your credentials to access your account
-          </CardDescription>
+          <CardDescription className="text-center">Enter your credentials to access your account</CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
@@ -98,7 +105,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder="doctor@hospitalpro.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -109,7 +116,6 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -117,10 +123,14 @@ export default function LoginPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="role">Login As</Label>
-              <Select value={role} onValueChange={(value) => setRole(value as UserRole)}>
+              <Select
+                defaultValue="patient"
+                onValueChange={(value) => setRole(value as UserRole)}
+              >
                 <SelectTrigger>
                   <SelectValue>{role}</SelectValue>
                 </SelectTrigger>
+
                 <SelectContent>
                   <SelectItem value="admin">Administrator</SelectItem>
                   <SelectItem value="doctor">Doctor</SelectItem>
@@ -133,12 +143,6 @@ export default function LoginPage() {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Logging in...' : 'Login'}
             </Button>
-            <Link
-              href="/sendResetOtp"
-              className="text-sm text-blue-600 hover:text-blue-800 underline text-center"
-            >
-              Forget your password?
-            </Link>
             <div className="text-center text-sm">
               Don&apos;t have an account?{' '}
               <Link href="/register" className="text-blue-600 hover:text-blue-800 font-medium">

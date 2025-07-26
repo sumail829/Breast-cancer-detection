@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,38 +16,79 @@ import { Menu, Bell, Search, LogOut, Settings, User } from 'lucide-react';
 import { ModeToggle } from '@/components/theme-toggle';
 import { UserRole } from '@/lib/types';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/app/context/AuthContext';
+import axios from 'axios';
+import { AdminDataProvider } from '@/app/context/AdminDataContext';
 
 interface DashboardHeaderProps {
   onMenuButtonClick: () => void;
   userRole: UserRole;
 }
 
-export default function DashboardHeader({ onMenuButtonClick, userRole }: DashboardHeaderProps) {
-  const router = useRouter();
-  const [notifications, setNotifications] = useState([
-    { id: 1, content: 'New appointment request', time: '5 minutes ago' },
-    { id: 2, content: 'Dr. Smith updated a patient record', time: '1 hour ago' },
-    { id: 3, content: 'System maintenance scheduled', time: '2 hours ago' },
-  ]);
-
- const handleLogout = async () => {
-  try {
-    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/doctor/logout`, {
-      method: 'POST',
-      credentials: 'include',
-    });
-    router.push('/');
-  } catch (err) {
-    alert("Logout failed:");
-    console.error("Logout failed:", err);
-  }
+type Notification = {
+  _id: string;
+  message: string;
+  createdAt: string;
 };
 
 
-  const userName = userRole === 'admin' 
-    ? 'Admin User' 
-    : userRole === 'doctor' 
-      ? 'Dr. Johnson' 
+export default function DashboardHeader({ onMenuButtonClick, userRole }: DashboardHeaderProps) {
+  const { user, role, logout } = useAuth();
+  const router = useRouter();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  const {patient}=AdminDataProvider
+
+  useEffect(() => {
+  const user = JSON.parse(localStorage.getItem('userData') || '{}');
+  if (!user || !user._id || !user.role) return;
+
+  const fetchNotifications = async () => {
+    try {
+      let url = "";
+
+      if (user.role === 'doctor') {
+        url = `http://localhost:4000/api/notification/${user._id}`;
+      } else if (user.role === 'patient') {
+        url = `http://localhost:4000/api/notification/patient/${user._id}`;
+      } else {
+        return; 
+      }
+      const res = await axios.get(url);
+      setNotifications(res.data.notifications);
+    } catch (error) {
+      console.error('Failed to load notifications', error);
+    }
+  };
+
+  fetchNotifications();
+}, []);
+
+  const handleLogout = () => {
+    // In a real app, you would handle actual logout logic here
+    logout(); // clear context + localStorage
+
+    // redirect to login
+    switch (role) {
+      case 'admin':
+        router.push('/admin/login');
+        break;
+      case 'doctor':
+        router.push('/doctor/login');
+        break;
+      case 'patient':
+        router.push('/patient/login');
+        break;
+      default:
+        router.push('/login');
+    }
+    router.push('/login');
+  };
+
+  const userName = userRole === 'admin'
+    ? 'Admin User'
+    : userRole === 'doctor'
+      ? 'Dr. Johnson'
       : 'Patient Smith';
 
   return (
@@ -85,10 +126,12 @@ export default function DashboardHeader({ onMenuButtonClick, userRole }: Dashboa
               <DropdownMenuLabel>Notifications</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {notifications.map((notification) => (
-                <DropdownMenuItem key={notification.id} className="cursor-pointer py-3">
+                <DropdownMenuItem key={notification._id} className="cursor-pointer py-3">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium">{notification.content}</p>
-                    <p className="text-xs text-gray-500">{notification.time}</p>
+                    <p className="text-sm font-medium">{notification.message}</p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(notification.createdAt).toLocaleString()}
+                    </p>
                   </div>
                 </DropdownMenuItem>
               ))}
@@ -104,9 +147,11 @@ export default function DashboardHeader({ onMenuButtonClick, userRole }: Dashboa
               <Button variant="ghost" className="relative h-8 rounded-full" size="icon">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="" alt="@user" />
+                  
                   <AvatarFallback className="bg-primary text-primary-foreground">
                     {userName.charAt(0)}
                   </AvatarFallback>
+                  
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>

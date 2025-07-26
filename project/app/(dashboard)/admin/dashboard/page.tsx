@@ -26,7 +26,51 @@ import Link from 'next/link';
 export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const { doctors, patients, appointments } = useAdminData();
+    const [hasMounted, setHasMounted] = useState(false);
+  const [admin, setAdmin] = useState<null | {
+    firstName: string;
+    lastName: string;
+    email: string;
+  }>(null);
   const router = useRouter();
+  useEffect(() => {
+     setHasMounted(true); 
+    const storedDoctor = localStorage.getItem("userData");
+
+    if (!storedDoctor) return;
+
+    try {
+      const adminData = JSON.parse(storedDoctor);
+      const adminId = adminData._id;
+      console.log('admin ID:', adminId);
+
+      const fetchAdmin = async () => {
+        try {
+          const res = await axios.get(`http://localhost:4000/api/admin/${adminId}`);
+          console.log("Admin's data:", res.data);
+          setAdmin(res.data.fetchSingleAdmin);
+
+          // ✅ Delete doctorData after successful fetch
+          // localStorage.removeItem("doctorData");
+        } catch (error) {
+          console.error("Error fetching doctor data:", error);
+        }
+      };
+
+
+
+      fetchAdmin();
+    } catch (error) {
+      console.error("Invalid JSON in doctorData:", error);
+      // localStorage.removeItem("doctorData"); // Clean corrupted data
+    }
+  }, []);
+
+
+  if (!hasMounted) return null;
+
+
+
   // const [doctors, setDoctors] = useState<any[]>([]);
   // const [patients, setPatients] = useState<any[]>([]);
   // const [appointment,setAppointment]=useState<any[]>([])
@@ -92,7 +136,9 @@ export default function AdminDashboardPage() {
       <div className="flex flex-col space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome back, Admin! Here's what's happening in your hospital today.
+          <p className="text-muted-foreground">
+            Welcome back, {admin?.firstName || 'Admin'}! Here's what's happening in your hospital today.
+          </p>
         </p>
       </div>
 
@@ -105,21 +151,21 @@ export default function AdminDashboardPage() {
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <DashboardCard
+            <Link href="../admin/showDoctor"><DashboardCard
               title="Total Doctors"
               value={doctors.length}
               description="since last month"
               icon={<User className="h-4 w-4 text-muted-foreground" />}
               trend={{ value: 15, isPositive: true }}
 
-            />
-            <DashboardCard
+            /></Link>
+            <Link href="../admin/showPatient"> <DashboardCard
               title="Total Patients"
               value={patients.length}
               description="since last month"
               icon={<Users className="h-4 w-4 text-muted-foreground" />}
               trend={{ value: 8, isPositive: true }}
-            />
+            /></Link>
             <Link href="../admin/showAppointment" className="block">
               <DashboardCard
                 title="Appointments"
@@ -139,17 +185,17 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="col-span-1 md:col-span-2">
+            <Link href="../admin/showReport"><Card className="col-span-1 md:col-span-2">
               <CardHeader>
-                <CardTitle>Hospital Activity</CardTitle>
-                <CardDescription>User activity over the past 30 days</CardDescription>
+                <CardTitle>Medical Reports</CardTitle>
+                <CardDescription>Reports over the past 30 days</CardDescription>
               </CardHeader>
               <CardContent className="pl-2">
-                <AdminActivityChart />
+                {/* <AdminActivityChart /> */}
               </CardContent>
-            </Card>
+            </Card></Link>
 
-            <Card className="col-span-1">
+            {/* <Card className="col-span-1">
               <CardHeader>
                 <CardTitle>Pending Alerts</CardTitle>
                 <CardDescription>Require your attention</CardDescription>
@@ -185,7 +231,7 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

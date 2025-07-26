@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useAdminData } from '@/app/context/AdminDataContext';
+
 
 export default function CancerDetection() {
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -11,6 +11,7 @@ export default function CancerDetection() {
   const [results, setResults] = useState<any>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+     
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
@@ -25,22 +26,31 @@ export default function CancerDetection() {
       setMessage("Please select an image first");
       return;
     }
+  //  const user = JSON.parse(localStorage.getItem('userData') || '{}');
+  //   const patientId = user._id
+  //   console.log(patientId,"this is new patient Id")
 
     setIsLoading(true);
     setMessage("Analyzing image...");
 
     const formData = new FormData();
     formData.append('imageUrl', imageFile);
+    // formData.append('patientId', patientId); 
 
     try {
+
+       
+      
       const res = await axios.post('http://localhost:4000/api/patients/uploadImage', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
+           Authorization: `Bearer ${localStorage.getItem('token')}`,
         }
       });
 
-      setMessage(res.data.message || "Analysis complete");
+      setMessage(res.data.message || "Analysis complete");   console.log(res.data,"this is result")
       setResults(res.data);
+   
     } catch (error: any) {
       console.error(error);
       setMessage("Error analyzing image. Please try again.");
@@ -149,7 +159,7 @@ export default function CancerDetection() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                       <p className="text-sm font-medium text-gray-500">Name</p>
-                      <p className="text-gray-900">{results.record?.name || 'N/A'}</p>
+                      <p className="text-gray-900">{results.record?.firstName || 'N/A'} {results.record?.lastName || 'N/A'}</p>
                     </div>
                     <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                       <p className="text-sm font-medium text-gray-500">Age</p>
@@ -161,7 +171,7 @@ export default function CancerDetection() {
                     </div>
                     <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                       <p className="text-sm font-medium text-gray-500">Contact</p>
-                      <p className="text-gray-900">{results.record?.contact || 'N/A'}</p>
+                      <p className="text-gray-900">{results.record?.phone || 'N/A'}</p>
                     </div>
                   </div>
                 </div>

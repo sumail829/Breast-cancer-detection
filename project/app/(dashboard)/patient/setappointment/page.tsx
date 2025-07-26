@@ -64,7 +64,7 @@ export default function SetAppointmentPage() {
             Authorization: `Bearer ${token}`,
           }
         });
-        console.log(res.data,"tjis is doctor data");
+        console.log(res.data, "tjis is doctor data");
         setDoctors(res.data.doctors);
       } catch (err) {
         console.error('Error fetching doctors:', err);
@@ -99,12 +99,16 @@ export default function SetAppointmentPage() {
         return;
       }
       const patient = JSON.parse(patientDataStr);
+      // Combine selectedDate and selectedTime into a single Date object
+      const combinedDateTimeString = `${format(selectedDate, 'yyyy-MM-dd')} ${selectedTime}`;
+      // Example: "2025-07-24 10:00 AM"
 
+      const combinedDateTime = new Date(combinedDateTimeString);
       // Create appointment
       const appointmentRes = await axios.post('http://localhost:4000/api/appointments/create', {
         doctorId,
         patientId: patient._id,
-        date: selectedDate.toISOString(),
+        date: combinedDateTime.toISOString(),
         notes: "health checkup"
       });
 

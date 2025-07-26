@@ -90,8 +90,13 @@ export default function RegisterPage() {
         title: 'Registration successful',
         description: 'Your account has been created. You can now log in.',
       });
-      localStorage.setItem("otpEmail", formData.email);
-      router.push('/verify-otp');
+      if (formData.role === 'patient') {
+    localStorage.setItem("otpEmail", formData.email);
+    router.push('/verify-otp');
+  } else {
+    // For doctor or admin, maybe redirect somewhere else, e.g. login page directly
+    router.push('/login');
+  }
     } catch (error: any) {
       toast({
         variant: 'destructive',

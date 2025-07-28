@@ -165,7 +165,7 @@ export default function DoctorPatientList({patientData}) {
             Manage and view information about your patients
           </CardDescription>
         </div>
-        <Button size="sm">Add Patient</Button>
+        {/* <Button size="sm">Add Patient</Button> */}
       </CardHeader>
       <CardContent>
         <div className="flex justify-between mb-4">
@@ -182,10 +182,10 @@ export default function DoctorPatientList({patientData}) {
               <TableHead>Patient</TableHead>
               <TableHead>Age</TableHead>
               <TableHead>Contact</TableHead>
-              <TableHead>Last Visit</TableHead>
+              <TableHead></TableHead>
               <TableHead>Next Appointment</TableHead>
               <TableHead>Cancer Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              {/* <TableHead className="text-right">Actions</TableHead> */}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -200,7 +200,7 @@ export default function DoctorPatientList({patientData}) {
                     </Avatar>
                     <div>
                       <div className="font-medium"> {patient.patientId.firstName}{patient.patientId.lastName}</div>
-                      <div className="text-xs text-muted-foreground">ID: {patient.id}</div>
+                      <div className="text-xs text-muted-foreground"> {patient.id}</div>
                     </div>
                   </div>
                 </TableCell>
@@ -219,14 +219,14 @@ export default function DoctorPatientList({patientData}) {
                 <TableCell>
                   {getCancerStatusBadge(patient.cancerStatus) || "Not tested"}
                 </TableCell>
-                <TableCell className="text-right">
+                {/* <TableCell className="text-right">
                   <Button variant="ghost" size="sm">
                     View
                   </Button>
                   <Button variant="ghost" size="sm">
                     Edit
                   </Button>
-                </TableCell>
+                </TableCell> */}
               </TableRow>
             ))}
           </TableBody>

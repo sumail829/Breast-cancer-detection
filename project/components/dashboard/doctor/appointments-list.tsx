@@ -262,9 +262,9 @@ const handleUpdate=async(notif:any)=>{
               Manage your scheduled appointments
             </CardDescription>
           </div>
-          <Button size="sm">
+          {/* <Button size="sm">
             Schedule New
-          </Button>
+          </Button> */}
         </CardHeader>
         <CardContent>
           {/* {filteredAppointments.length === 0 ? (

@@ -175,21 +175,21 @@ export default function AdminDashboardPage() {
                 trend={{ value: 3, isPositive: true }}
               />
             </Link>
-            <DashboardCard
+            {/* <DashboardCard
               title="Cancer Predictions"
               value="128"
               description="this month"
               icon={<Activity className="h-4 w-4 text-muted-foreground" />}
               trend={{ value: 5, isPositive: false }}
-            />
+            /> */}
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Link href="../admin/showReport"><Card className="col-span-1 md:col-span-2">
-              <CardHeader>
+              {/* <CardHeader>
                 <CardTitle>Medical Reports</CardTitle>
                 <CardDescription>Reports over the past 30 days</CardDescription>
-              </CardHeader>
+              </CardHeader> */}
               <CardContent className="pl-2">
                 {/* <AdminActivityChart /> */}
               </CardContent>
@@ -234,10 +234,10 @@ export default function AdminDashboardPage() {
             </Card> */}
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {/* <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <AdminRecentActivity />
             <AdminPredictionsOverview />
-          </div>
+          </div> */}
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">

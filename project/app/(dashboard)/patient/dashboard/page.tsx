@@ -19,7 +19,9 @@ export default function PatientDashboardPage() {
   const [patientData, setPatientData] = useState<any>(null);
   const [showChat, setShowChat] = useState(false);
   const [user, setUser] = useState<any>(null);
-
+  const [doctorChats, setDoctorChats] = useState([]);
+  const [selectedDoctorId, setSelectedDoctorId] = useState(null);
+const[loading,setLoading]=useState(false);
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem('userData') || '{}');
     setUser(storedUser);
@@ -49,6 +51,34 @@ export default function PatientDashboardPage() {
 
   const doctorId = patientData?.doctorId?._id;
   const patientId = user?._id;
+
+  // useEffect(() => {
+  //   async function fetchDoctorChats() {
+  //     const res = await axios.get(`http://localhost:4000/api/chat/partners/patient/${patientId}`);
+  //     setDoctorChats(res.data);
+  //     if (res.data.length > 0) setSelectedDoctorId(res.data[0]._id);
+  //   }
+  //   fetchDoctorChats();
+  // }, [patientId]);
+
+  const handleNewScreeningPayment = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.post("http://localhost:4000/api/initialize-khalti", {});
+      const paymentUrl = res.data?.payment?.payment_url;
+
+      if (paymentUrl) {
+        window.location.href = paymentUrl;
+      } else {
+        alert("Failed to initiate Khalti payment");
+      }
+    } catch (err) {
+      console.error("Payment Error", err);
+      alert("Error initializing payment");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex flex-col space-y-6">
@@ -141,8 +171,27 @@ export default function PatientDashboardPage() {
             </Card>
           </div>
 
+          <div>
+            <select onChange={e => setSelectedDoctorId(e.target.value)} value={selectedDoctorId}>
+              {doctorChats.map(doc => (
+                <option key={doc._id} value={doc._id}>
+                  Dr. {doc.firstName} {doc.lastName}
+                </option>
+              ))}
+            </select>
+            {selectedDoctorId && (
+              <ChatBox
+                doctorId={selectedDoctorId}
+                patientId={patientId}
+                userRole="patient"
+                doctorName={`Dr. ${doctorChats.find(d => d._id === selectedDoctorId).firstName}`}
+                patientName={patientName}
+              />
+            )}
+          </div>
           {/* Chat Floating UI */}
           {showChat && doctorId && patientId && (
+
             <div
               style={{
                 position: 'fixed',
@@ -240,15 +289,15 @@ export default function PatientDashboardPage() {
         </TabsContent>
       </Tabs>
 
-       <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Breast Cancer Screening</CardTitle>
-                <CardDescription>Your latest test results</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* <div className="flex items-center justify-between">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Breast Cancer Screening</CardTitle>
+            <CardDescription>Your latest test results</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* <div className="flex items-center justify-between">
                     <p className="text-sm font-medium">Last Test</p>
                     <p className="text-sm text-muted-foreground">March 10, 2025</p>
                   </div>
@@ -269,18 +318,30 @@ export default function PatientDashboardPage() {
                       <p className="text-sm font-medium">6 months</p>
                     </div>
                   </div> */}
-                  <div className="flex space-x-2">
-                    <Button variant="outline" className="flex-1" asChild>
-                      <Link href="/patient/test-results">View Report</Link>
-                    </Button>
-                    <Button className="flex-1" asChild>
-                      <Link href="/patient/cancer">New Screening</Link>
-                    </Button>
-                  </div>
+              {/* <div className="flex space-x-2">
+                <Button variant="outline" className="flex-1" asChild>
+                  <Link href="/patient/test-results">View Report</Link>
+                </Button>
+                <Button className="flex-1" asChild>
+                  <Link href="/patient/cancer">New Screening</Link>
+                </Button>
+              </div> */} <div>
+                  Charge:Rs 500
                 </div>
-              </CardContent>
-            </Card>
+              <div className="flex space-x-2">
+                <Button variant="outline" className="flex-1" asChild>
+                  <a href="/patient/test-results">View Report</a>
+                </Button>
+               
+
+                <Button className="flex-1" onClick={handleNewScreeningPayment} disabled={loading}>
+                  {loading ? "Redirecting..." : "New Screening"}
+                </Button>
+              </div>
             </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

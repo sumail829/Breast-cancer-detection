@@ -86,13 +86,13 @@ export default function RegisterPage() {
         age: Number(formData.age),
       })
       console.log(response);
-      toast({
-        title: 'Registration successful',
-        description: 'Your account has been created. You can now log in.',
-      });
       if (formData.role === 'patient') {
-    localStorage.setItem("otpEmail", formData.email);
-    router.push('/verify-otp');
+        localStorage.setItem("otpEmail", formData.email);
+        router.push('/verify-otp');
+        toast({
+          title: 'Registration successful',
+          description: 'Your account has been created. You can now log in.',
+        });
   } else {
     // For doctor or admin, maybe redirect somewhere else, e.g. login page directly
     router.push('/login');
@@ -148,10 +148,10 @@ export default function RegisterPage() {
               <Label htmlFor="phone">Phone</Label>
               <Input name="phone" value={formData.phone} onChange={handleChange} required />
             </div>
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="dateOfBirth">Date of Birth</Label>
               <Input name="dateOfBirth" type="date" value={formData.dateOfBirth} onChange={handleChange} required />
-            </div>
+            </div> */}
             <div className="space-y-2">
               <Label htmlFor="age">Age</Label>
               <Input name="age" type="number" value={formData.age} onChange={handleChange} required />

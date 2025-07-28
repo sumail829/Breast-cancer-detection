@@ -1,30 +1,30 @@
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import { createServer } from "http"; // ✅ new
-import { Server } from "socket.io"; // ✅ new
+import { createServer } from "http";
+import { Server } from "socket.io";
 import connectDB from "./config/db.js";
-import { socketConnection } from "./socket.js";
+import { socketConnection } from "./socket.js"; // ✅ correct use
+
+// Routes
 import doctorRoutes from "./routes/doctorRoutes.js";
 import patientRoutes from "./routes/patientRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import medicalRecordRoutes from "./routes/medicalRecordRoutes.js";
 import appointmentRoutes from "./routes/appointmentRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
-import chatRoutes from "./routes/chatRoutes.js"
-
-import './socket.js'; // ✅ You’ll create this next
+import chatRoutes from "./routes/chatRoutes.js";
+import paymentRoutes from "./routes/paymetRoutes.js";
 
 connectDB();
 
 const app = express();
-const httpServer = createServer(app); // ✅ create HTTP server
+const httpServer = createServer(app);
 
-// Enable CORS & JSON
 app.use(cors());
 app.use(express.json());
 
-// All routes
+// Use API routes
 app.use("/api", doctorRoutes);
 app.use("/api", patientRoutes);
 app.use("/api", adminRoutes);
@@ -32,7 +32,8 @@ app.use("/api", medicalRecordRoutes);
 app.use("/api", appointmentRoutes);
 app.use("/api", notificationRoutes);
 app.use("/api", chatRoutes);
-
+app.use("/api", paymentRoutes);
+// 404 Handler
 app.use((req, res) => {
   console.log(`❌ 404 - Route not found: ${req.method} ${req.originalUrl}`);
   res.status(404).send("Route not found");
@@ -41,14 +42,13 @@ app.use((req, res) => {
 // ✅ Setup Socket.IO
 const io = new Server(httpServer, {
   cors: {
-    origin: "*", // For now allow all. Use your frontend domain later
+    origin: "*", // Replace with frontend URL in production
     methods: ["GET", "POST"],
   },
 });
 
-socketConnection(io); // ✅ use your socket logic here
+socketConnection(io); // ✅ Using your socket logic
 
-// Start server
 const PORT = 4000;
 httpServer.listen(PORT, () => {
   console.log(`🚀 Server with Socket.IO running on port ${PORT}`);
